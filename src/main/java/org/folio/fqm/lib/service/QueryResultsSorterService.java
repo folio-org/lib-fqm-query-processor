@@ -4,11 +4,19 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.fqm.lib.model.IdsWithCancelCallback;
 import org.folio.fqm.lib.repository.IdStreamer;
 import org.folio.fqm.lib.repository.MetaDataRepository;
+import org.folio.querytool.domain.dto.EntityType;
+import org.jooq.Condition;
 
 import javax.sql.DataSource;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+
+import static org.folio.fqm.lib.repository.MetaDataRepository.ID_FIELD_NAME;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.table;
 
 /**
  * Sorts the results of a query according to the default sort criteria of the entity type, and then
@@ -59,5 +67,21 @@ public class QueryResultsSorterService {
     } catch (Exception exception) {
       errorHandler.accept(exception);
     }
+  }
+
+  public List<UUID> getSortedIds(String tenantId, UUID queryId, String derivedTableName,
+                                 EntityType entityType, int offset, int limit) {
+    log.debug("Getting sorted ids for query {}, offset {}, limit {}", queryId, offset, limit);
+    Condition condition = field(ID_FIELD_NAME).in(
+      select(field("result_id"))
+        .from(table(getFqmSchemaName(tenantId) + ".query_results"))
+        .where(field("query_id").eq(queryId))
+    );
+    // Sort ids based on the sort criteria defined in the entity type definition
+    return idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit);
+  }
+
+  private String getFqmSchemaName(String tenantId) {
+    return tenantId + "_mod_fqm_manager";
   }
 }

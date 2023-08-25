@@ -6,28 +6,17 @@ import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.FieldCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
-import org.folio.fqm.lib.exception.EntityTypeNotFoundException;
-import org.folio.fqm.lib.repository.MetaDataRepository;
 import org.folio.querytool.domain.dto.EntityType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class FqlValidationService {
 
   private final FqlService fqlService;
 
-  private final MetaDataRepository metaDataRepository;
-
-  public FqlValidationService(FqlService fqlService, MetaDataRepository metaDataRepository) {
+  public FqlValidationService(FqlService fqlService) {
     this.fqlService = fqlService;
-    this.metaDataRepository = metaDataRepository;
-  }
-
-  public Map<String, String> validateFql(String tenantId, UUID entityTypeId, String fqlCriteria) {
-    EntityType entityType = getEntityType(tenantId, entityTypeId);
-    return validateFql(entityType, fqlCriteria);
   }
 
   public Map<String, String> validateFql(EntityType entityType, String fqlCriteria) {
@@ -59,10 +48,5 @@ public class FqlValidationService {
         );
     }
     return errorMap;
-  }
-
-  private EntityType getEntityType(String tenantId, UUID entityTypeId) {
-    return metaDataRepository.getEntityTypeDefinition(tenantId, entityTypeId)
-      .orElseThrow(() -> new EntityTypeNotFoundException(entityTypeId));
   }
 }

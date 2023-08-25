@@ -76,6 +76,18 @@ public class IdStreamer {
     return streamIdsInBatch(entityType, derivedTable, sortResults, condition, batchSize, idsConsumer);
   }
 
+  public List<UUID> getSortedIds(String derivedTableName, EntityType entityType,
+                                 Condition sqlWhereClause, int offset, int batchSize) {
+    return jooqContext.dsl()
+        .select(field(ID_FIELD_NAME))
+        .from(derivedTableName)
+        .where(sqlWhereClause)
+        .orderBy(getSortFields(entityType, true))
+        .offset(offset)
+        .limit(batchSize)
+        .fetchInto(UUID.class);
+    }
+
   private int streamIdsInBatch(EntityType entityType,
                                String derivedTableName,
                                boolean sortResults,
