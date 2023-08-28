@@ -5,10 +5,38 @@
   <groupId>org.folio</groupId>
   <artifactId>lib-fqm-query-processor</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <name>lib-fqm-query-processor</name>
+  <description>FQM Query processor library</description>
+  <organization>
+    <name>The Open Library Foundation</name>
+    <url>https://dev.folio.org/</url>
+  </organization>
+
+  <properties>
+    <java.version>17</java.version>
+    <junit-jupiter-api.version>5.9.3</junit-jupiter-api.version>
+    <folio-query-tool-metadata.version>1.0.0-SNAPSHOT</folio-query-tool-metadata.version>
+    <mockito-core.version>5.3.0</mockito-core.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <org.jooq.version>3.18.4</org.jooq.version>
+    <org.projectlombok.verion>1.18.28</org.projectlombok.verion>
+    <org.apache.logging.log4j.version>2.20.0</org.apache.logging.log4j.version>
+    <org.apache.commons.version>4.4</org.apache.commons.version>
+  </properties>
+
+  <scm>
+    <url>https://github.com/folio-org/lib-fqm-query-processor</url>
+    <connection>scm:git:git://github.com/folio-org/lib-fqm-query-processor.git</connection>
+    <developerConnection>scm:git:git@github.com:folio-org/lib-fqm-query-processor.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
         <executions>
           <execution>
             <id>filter-descriptor-inputs</id>
@@ -36,6 +64,48 @@
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- *-source.jar for https://repository.folio.org -->
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- *-javadoc.jar for https://repository.folio.org -->
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- Enforce that this deploy runs AFTER attach-sources and attach-javadocs -->
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <id>deploy</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>deploy</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -70,20 +140,7 @@
       </plugin>
     </plugins>
   </build>
-  <name>lib-fqm-query-processor</name>
-  <description>FQM Query processor library</description>
-  <properties>
-    <java.version>17</java.version>
-    <junit-jupiter-api.version>5.9.3</junit-jupiter-api.version>
-    <folio-query-tool-metadata.version>1.0.0-SNAPSHOT</folio-query-tool-metadata.version>
-    <mockito-core.version>5.3.0</mockito-core.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <org.jooq.version>3.18.4</org.jooq.version>
-    <org.projectlombok.verion>1.18.28</org.projectlombok.verion>
-    <org.apache.logging.log4j.version>2.20.0</org.apache.logging.log4j.version>
-    <org.apache.commons.version>4.4</org.apache.commons.version>
-  </properties>
+
   <repositories>
     <repository>
       <id>folio-nexus</id>
@@ -91,6 +148,24 @@
       <url>https://repository.folio.org/repository/maven-folio</url>
     </repository>
   </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>folio-nexus</id>
+      <name>FOLIO Release Repository</name>
+      <url>https://repository.folio.org/repository/maven-releases/</url>
+      <uniqueVersion>false</uniqueVersion>
+      <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Snapshot Repository</name>
+      <uniqueVersion>true</uniqueVersion>
+      <url>https://repository.folio.org/repository/maven-snapshots/</url>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.folio</groupId>
