@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.folio.querytool.domain.dto.EntityType;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,13 +45,14 @@ public class MetaDataRepository {
       .map(tableName -> schemaName + "." + tableName);
   }
 
-  public Optional<EntityType> getEntityTypeDefinition(String tenantId, UUID entityTypeId) {
+  public Optional<EntityType> getEntityTypeDefinition(String tenantId, UUID entityTypeId, String searchText) {
     log.info("Getting definition name for tenant {}, entity type ID: {}", tenantId, entityTypeId);
+    Condition searchTextCondition = searchText == null ? DSL.trueCondition() : field(ID_FIELD_NAME).like(searchText + "%");
     var definitionField = field("definition", String.class);
     return jooqContext
       .select(definitionField)
       .from(getFqmSchemaName(tenantId) + ".entity_type_definition")
-      .where(field(ID_FIELD_NAME).eq(entityTypeId))
+      .where(field(ID_FIELD_NAME).eq(entityTypeId).and(searchTextCondition))
       .fetchOptional(definitionField)
       .map(this::unmarshallEntityType);
   }

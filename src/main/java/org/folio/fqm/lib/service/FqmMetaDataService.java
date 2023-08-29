@@ -4,6 +4,7 @@ import org.folio.fqm.lib.exception.EntityTypeNotFoundException;
 import org.folio.fqm.lib.repository.MetaDataRepository;
 import org.folio.querytool.domain.dto.EntityType;
 
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,8 +21,8 @@ public class FqmMetaDataService {
     this.metaDataRepository = metaDataRepository;
   }
 
-  public Optional<EntityType> getEntityTypeDefinition(String tenantId, UUID entityTypeId) {
-    return metaDataRepository.getEntityTypeDefinition(tenantId, entityTypeId);
+  public Optional<EntityType> getEntityTypeDefinition(String tenantId, UUID entityTypeId, String searchText) {
+    return metaDataRepository.getEntityTypeDefinition(tenantId, entityTypeId, searchText);
   }
 
   public String getDerivedTableName(String tenantId, UUID entityTypeId) {
