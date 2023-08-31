@@ -5,6 +5,8 @@ import org.folio.fqm.lib.model.IdsWithCancelCallback;
 import org.folio.fql.model.EqualsCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fqm.lib.repository.dataproviders.IdStreamerTestDataProvider;
+import org.folio.querytool.domain.dto.EntityType;
+import org.jooq.Condition;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.MockConnection;
@@ -17,6 +19,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static org.folio.fqm.lib.repository.MetaDataRepository.ID_FIELD_NAME;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -57,6 +63,22 @@ class IdStreamerTest {
     int idsCount = idStreamer.streamIdsInBatch(TENANT_ID, ENTITY_TYPE_ID, true, fql, 2, idsConsumer);
     assertEquals(IdStreamerTestDataProvider.TEST_CONTENT_IDS, actualList, "Expected List should equal Actual List");
     assertEquals(IdStreamerTestDataProvider.TEST_CONTENT_IDS.size(), idsCount);
+  }
+
+  @Test
+  void shouldGetSortedIds() {
+    UUID queryId = UUID.randomUUID();
+    int offset = 0;
+    int limit = 0;
+    String derivedTableName = "table_01";
+    EntityType entityType = new EntityType().name("test-entity");
+    Condition condition = field(ID_FIELD_NAME).in(
+      select(field("result_id"))
+        .from(table("Tenant_01_mod_fqm_manager.query_results"))
+        .where(field("query_id").eq(queryId))
+    );
+    List<UUID> actualIds = idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit);
+    assertEquals(IdStreamerTestDataProvider.TEST_CONTENT_IDS, actualIds);
   }
 
   @Test

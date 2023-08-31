@@ -3,28 +3,35 @@ package org.folio.fqm.lib.service;
 import org.folio.fqm.lib.model.IdsWithCancelCallback;
 import org.folio.fqm.lib.repository.IdStreamer;
 import org.folio.fqm.lib.repository.MetaDataRepository;
+import org.folio.querytool.domain.dto.EntityType;
 import org.jooq.Condition;
 import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
+import static org.folio.fqm.lib.repository.MetaDataRepository.ID_FIELD_NAME;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.select;
-import static org.mockito.Mockito.*;
+import static org.jooq.impl.DSL.table;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
 
 class QueryResultsSorterServiceTest {
-  private QueryResultsSorterService queryResultsService;
+  private QueryResultsSorterService queryResultsSorterService;
   private IdStreamer idStreamer;
 
   @BeforeEach
   void setup() {
     idStreamer = mock(IdStreamer.class);
-    this.queryResultsService = new QueryResultsSorterService(idStreamer);
+    this.queryResultsSorterService = new QueryResultsSorterService(idStreamer);
   }
 
   @Test
@@ -40,7 +47,7 @@ class QueryResultsSorterServiceTest {
     IntConsumer totalCountConsumer = mock(IntConsumer.class);
     Consumer<Throwable> errorConsumer = mock(Consumer.class);
 
-    queryResultsService.streamSortedIds(
+    queryResultsSorterService.streamSortedIds(
       tenantId,
       queryId,
       batchSize,
@@ -56,5 +63,24 @@ class QueryResultsSorterServiceTest {
         batchSize,
         idsConsumer
       );
+  }
+
+  @Test
+  void shouldGetSortedIds() {
+    String tenantId = "tenant_01";
+    UUID queryId = UUID.randomUUID();
+    int offset = 0;
+    int limit = 0;
+    String derivedTableName = "table_01";
+    EntityType entityType = new EntityType().name("test-entity");
+    Condition condition = field(ID_FIELD_NAME).in(
+      select(field("result_id"))
+        .from(table("tenant_01_mod_fqm_manager.query_results"))
+        .where(field("query_id").eq(queryId))
+    );
+    List<UUID> expectedIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+    when(idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit)).thenReturn(expectedIds);
+    List<UUID> actualIds = queryResultsSorterService.getSortedIds(tenantId, queryId, derivedTableName, entityType, offset, limit);
+    assertEquals(expectedIds, actualIds);
   }
 }

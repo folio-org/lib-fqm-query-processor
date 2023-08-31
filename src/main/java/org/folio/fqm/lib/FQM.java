@@ -1,7 +1,6 @@
 package org.folio.fqm.lib;
 
 import org.folio.fql.FqlService;
-import org.folio.fqm.lib.repository.MetaDataRepository;
 import org.folio.fqm.lib.service.FqmMetaDataService;
 import org.folio.fqm.lib.service.QueryProcessorService;
 import org.folio.fqm.lib.service.QueryResultsSorterService;
@@ -32,8 +31,8 @@ public class FQM {
     return new QueryResultsSorterService(dataSource);
   }
 
-  public static FqlValidationService fqlValidationService(DataSource dataSource) {
-    return new FqlValidationService(new FqlService(), new MetaDataRepository(dataSource));
+  public static FqlValidationService fqlValidationService() {
+    return new FqlValidationService(new FqlService());
   }
 
   public static FqlService fqlService() {

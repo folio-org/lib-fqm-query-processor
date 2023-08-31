@@ -2,7 +2,9 @@ package org.folio.fqm.lib.service;
 
 import org.folio.fql.FqlService;
 import org.folio.fqm.lib.repository.MetaDataRepository;
-import org.folio.querytool.domain.dto.*;
+import org.folio.querytool.domain.dto.EntityType;
+import org.folio.querytool.domain.dto.EntityTypeColumn;
+import org.folio.querytool.domain.dto.StringType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +39,7 @@ class FqlValidationServiceTest {
   @BeforeEach
   public void setup() {
     MetaDataRepository metaDataRepository = mock(MetaDataRepository.class);
-    this.fqlValidationService = new FqlValidationService(new FqlService(), metaDataRepository);
+    this.fqlValidationService = new FqlValidationService(new FqlService());
     when(metaDataRepository.getEntityTypeDefinition(TENANT_ID, ENTITY_TYPE_ID)).thenReturn(Optional.of(entityType));
   }
 
@@ -46,7 +49,7 @@ class FqlValidationServiceTest {
       {"field1": {"$eq": "some value"}}
       """;
     Map<String, String> expectedErrors = Map.of();
-    Map<String, String> actualErrors = fqlValidationService.validateFql(TENANT_ID, ENTITY_TYPE_ID, fqlCondition);
+    Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, fqlCondition);
     assertEquals(expectedErrors, actualErrors);
   }
 
@@ -71,7 +74,7 @@ class FqlValidationServiceTest {
       }
       """;
     Map<String, String> expectedErrors = Map.of();
-    Map<String, String> actualErrors = fqlValidationService.validateFql(TENANT_ID, ENTITY_TYPE_ID, complexFql);
+    Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, complexFql);
     assertEquals(expectedErrors, actualErrors);
   }
 
@@ -80,7 +83,7 @@ class FqlValidationServiceTest {
     String fqlCondition = """
       {"field1": {"$eq": "some value"}
       """;
-    Map<String, String> actualErrors = fqlValidationService.validateFql(TENANT_ID, ENTITY_TYPE_ID, fqlCondition);
+    Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, fqlCondition);
     assertEquals(1, actualErrors.size());
     assertTrue(actualErrors.containsKey(fqlCondition) && actualErrors.get(fqlCondition) != null);
   }
@@ -92,7 +95,7 @@ class FqlValidationServiceTest {
       """;
     String expectedErrorMessage = "Condition {\"$xy\":\"some value\"} contains an invalid operator";
     Map<String, String> expectedErrors = Map.of("field1", expectedErrorMessage);
-    Map<String, String> actualErrors = fqlValidationService.validateFql(TENANT_ID, ENTITY_TYPE_ID, fqlCondition);
+    Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, fqlCondition);
     assertEquals(expectedErrors, actualErrors);
   }
 
@@ -103,7 +106,7 @@ class FqlValidationServiceTest {
       """;
     String expectedErrorMessage = "Field field4 is not present in definition of entity type " + entityType.getName();
     Map<String, String> expectedErrors = Map.of("field4", expectedErrorMessage);
-    Map<String, String> actualErrors = fqlValidationService.validateFql(TENANT_ID, ENTITY_TYPE_ID, fqlCondition);
+    Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, fqlCondition);
     assertEquals(expectedErrors, actualErrors);
   }
 
@@ -123,7 +126,7 @@ class FqlValidationServiceTest {
       "field4", expectedErrorMessage1,
       "field5", expectedErrorMessage2
     );
-    Map<String, String> actualErrors = fqlValidationService.validateFql(TENANT_ID, ENTITY_TYPE_ID, fqlCondition);
+    Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, fqlCondition);
     assertEquals(expectedErrors, actualErrors);
   }
 }
