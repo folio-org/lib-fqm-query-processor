@@ -8,7 +8,9 @@ import org.folio.querytool.domain.dto.EntityType;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
+import org.postgresql.jdbc.PgArray;
 
+import java.sql.SQLException;
 import java.util.*;
 
 import static org.folio.fqm.lib.repository.MetaDataRepository.ID_FIELD_NAME;
@@ -41,12 +43,12 @@ public class ResultSetRepository {
       return List.of();
     }
     var fieldsToSelect = getSqlFields(getEntityType(tenantId, entityTypeId), fields);
-    return jooqContext.select(fieldsToSelect)
+    var result = jooqContext.select(fieldsToSelect)
       .from(metaDataRepository.getDerivedTableName(tenantId, entityTypeId)
         .orElseThrow(() -> new EntityTypeNotFoundException(entityTypeId)))
       .where(field(ID_FIELD_NAME).in(ids))
-      .fetch()
-      .map(Record::intoMap);
+      .fetch();
+    return recordToMap(result);
   }
 
   public List<Map<String, Object>> getResultSet(String tenantId, UUID entityTypeId, Fql fql, List<String> fields, UUID afterId, int limit) {
@@ -59,15 +61,15 @@ public class ResultSetRepository {
     Condition condition = fqlToSqlConverter.getSqlCondition(fql.fqlCondition(), entityType);
     var fieldsToSelect = getSqlFields(entityType, fields);
     var sortCriteria = hasIdColumn(entityType) ? field(ID_FIELD_NAME) : DSL.noField();
-    return jooqContext.select(fieldsToSelect)
+    var result = jooqContext.select(fieldsToSelect)
       .from(metaDataRepository.getDerivedTableName(tenantId, entityTypeId)
         .orElseThrow(() -> new EntityTypeNotFoundException(entityTypeId)))
       .where(condition)
       .and(afterIdCondition)
       .orderBy(sortCriteria)
       .limit(limit)
-      .fetch()
-      .map(Record::intoMap);
+      .fetch();
+    return recordToMap(result);
   }
 
   private List<Field<Object>> getSqlFields(EntityType entityType, List<String> fields) {
@@ -87,5 +89,24 @@ public class ResultSetRepository {
   private boolean hasIdColumn(EntityType entityType) {
     return entityType.getColumns().stream()
       .anyMatch(col -> ID_FIELD_NAME.equals(col.getName()));
+  }
+
+  private List<Map<String, Object>> recordToMap(Result<Record> result) {
+    List<Map<String, Object>> resultList = new ArrayList<>();
+    result.forEach(row -> {
+      Map<String, Object> recordMap = row.intoMap();
+      for (Map.Entry<String, Object> entry : recordMap.entrySet()) {
+        if (entry.getValue() instanceof PgArray pgArray) {
+          try {
+            recordMap.put(entry.getKey(), pgArray.getArray());
+          } catch (SQLException e) {
+            log.error("Error unpacking {} field of record: {}", entry.getKey(), e);
+            recordMap.remove(entry.getKey());
+          }
+        }
+      }
+      resultList.add(recordMap);
+    });
+    return resultList;
   }
 }
