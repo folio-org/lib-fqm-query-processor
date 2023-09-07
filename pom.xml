@@ -23,6 +23,7 @@
     <org.projectlombok.verion>1.18.28</org.projectlombok.verion>
     <org.apache.logging.log4j.version>2.20.0</org.apache.logging.log4j.version>
     <org.apache.commons.version>4.4</org.apache.commons.version>
+    <org.postgresql.version>42.5.4</org.postgresql.version>
   </properties>
 
   <scm>
@@ -206,6 +207,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>${org.apache.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${org.postgresql.version}</version>
     </dependency>
   </dependencies>
 </project>
