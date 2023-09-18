@@ -36,7 +36,8 @@ public class FqlToSqlConverter {
     LessThanCondition.class, (cnd, ent) -> handleLessThan((LessThanCondition) cnd, ent),
     AndCondition.class, (cnd, ent) -> handleAnd((AndCondition) cnd, ent),
     RegexCondition.class, (cnd, ent) -> handleRegEx((RegexCondition) cnd, ent),
-    ContainsCondition.class, (cnd, ent) -> handleContains((ContainsCondition) cnd, ent)
+    ContainsCondition.class, (cnd, ent) -> handleContains((ContainsCondition) cnd, ent),
+    NotContainsCondition.class, (cnd, ent) -> handleNotContains((NotContainsCondition) cnd, ent)
   );
 
   /**
@@ -193,6 +194,14 @@ public class FqlToSqlConverter {
       return field(containsCondition, entityType).containsIgnoreCase(s);
     }
     return field(containsCondition, entityType).contains(containsCondition.value());
+  }
+
+  private Condition handleNotContains(NotContainsCondition notContainsCondition, EntityType entityType) {
+    Field<Object> field = field(notContainsCondition, entityType);
+    if (notContainsCondition.value() instanceof String s) {
+      return field.notContainsIgnoreCase(s).or(field(notContainsCondition, entityType).isNull());
+    }
+    return field.notContains(notContainsCondition.value()).or(field(notContainsCondition, entityType).isNull());
   }
 
   private Field<Object> field(FieldCondition<?> condition, EntityType entityType) {

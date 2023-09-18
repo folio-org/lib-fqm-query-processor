@@ -115,6 +115,22 @@ Example:
 {"field1": {"$nin": ["value1", "value2"]}}
 ```
 
+### $contains
+Matches all records where the field (an array) contains the specified value. Supports string, number, and uuid types.
+
+Example:
+```json
+{"field1": {"$contains": 12}}
+```
+
+### $not_contains
+Matches all records where the field (an array) does not contain the specified value, or is null. Supports string, number, and uuid types.
+
+Example:
+```json
+{"field1": {"$not_contains": "value1"}}
+```
+
 ### $regex
 Provides regular expression capabilities for pattern matching strings in queries. At present, only the following two
 patterns are supported.
