@@ -1,6 +1,7 @@
 package org.folio.fqm.lib.repository;
 
 import org.folio.fqm.lib.exception.ColumnNotFoundException;
+import org.folio.querytool.domain.dto.ArrayType;
 import org.folio.querytool.domain.dto.DateType;
 import org.folio.querytool.domain.dto.EntityDataType;
 import org.folio.querytool.domain.dto.EntityType;
@@ -32,7 +33,8 @@ class FqlToSqlConverterTest {
           new EntityTypeColumn().name("field1").dataType(new EntityDataType().dataType("stringType")),
           new EntityTypeColumn().name("field2").dataType(new EntityDataType().dataType("stringType")),
           new EntityTypeColumn().name("field3").dataType(new EntityDataType().dataType("stringType")),
-          new EntityTypeColumn().name("field4").dataType(new DateType())
+          new EntityTypeColumn().name("field4").dataType(new DateType()),
+          new EntityTypeColumn().name("arrayField").dataType(new ArrayType())
         )
       );
   }
@@ -253,6 +255,26 @@ class FqlToSqlConverterTest {
     String fqlCondition = """
       {"field1": {"$nin": ["value1", 2, true]}}
       """;
+    Condition actualCondition = fqlToSqlConverter.getSqlCondition(fqlCondition, entityType);
+    assertEquals(expectedCondition, actualCondition);
+  }
+
+  @Test
+  void shouldGetJooqConditionForFqlContainsStringCondition() {
+    String fqlCondition = """
+      {"arrayField": {"$contains": "some value"}}
+      """;
+    Condition expectedCondition = field("arrayField").containsIgnoreCase("some value");
+    Condition actualCondition = fqlToSqlConverter.getSqlCondition(fqlCondition, entityType);
+    assertEquals(expectedCondition, actualCondition);
+  }
+
+  @Test
+  void shouldGetJooqConditionForFqlContainsNumericCondition() {
+    String fqlCondition = """
+      {"arrayField": {"$contains": 10}}
+      """;
+    Condition expectedCondition = field("arrayField").contains(10);
     Condition actualCondition = fqlToSqlConverter.getSqlCondition(fqlCondition, entityType);
     assertEquals(expectedCondition, actualCondition);
   }

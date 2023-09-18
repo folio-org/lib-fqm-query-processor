@@ -35,7 +35,8 @@ public class FqlToSqlConverter {
     GreaterThanCondition.class, (cnd, ent) -> handleGreaterThan((GreaterThanCondition) cnd, ent),
     LessThanCondition.class, (cnd, ent) -> handleLessThan((LessThanCondition) cnd, ent),
     AndCondition.class, (cnd, ent) -> handleAnd((AndCondition) cnd, ent),
-    RegexCondition.class, (cnd, ent) -> handleRegEx((RegexCondition) cnd, ent)
+    RegexCondition.class, (cnd, ent) -> handleRegEx((RegexCondition) cnd, ent),
+    ContainsCondition.class, (cnd, ent) -> handleContains((ContainsCondition) cnd, ent)
   );
 
   /**
@@ -185,6 +186,13 @@ public class FqlToSqlConverter {
   private Condition handleRegEx(RegexCondition regExCondition, EntityType entityType) {
     // perform case-insensitive regex search
     return condition("{0} ~* {1}", field(regExCondition, entityType), val(regExCondition.value()));
+  }
+
+  private Condition handleContains(ContainsCondition containsCondition, EntityType entityType) {
+    if (containsCondition.value() instanceof String s) {
+      return field(containsCondition, entityType).containsIgnoreCase(s);
+    }
+    return field(containsCondition, entityType).contains(containsCondition.value());
   }
 
   private Field<Object> field(FieldCondition<?> condition, EntityType entityType) {
