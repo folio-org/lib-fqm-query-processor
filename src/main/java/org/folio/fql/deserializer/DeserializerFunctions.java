@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static org.folio.fql.model.ContainsCondition.$CONTAINS;
 import static org.folio.fql.model.EqualsCondition.$EQ;
 import static org.folio.fql.model.NotEqualsCondition.$NE;
 import static org.folio.fql.model.GreaterThanCondition.$GT;
@@ -32,7 +33,8 @@ public class DeserializerFunctions {
     IS_GTE(node -> node.has($GTE) && node.get($GTE).isValueNode()),
     IS_LT(node -> node.has($LT) && node.get(LessThanCondition.$LT).isValueNode()),
     IS_LTE(node -> node.has($LTE) && node.get($LTE).isValueNode()),
-    IS_REGEX(node -> node.has($REGEX) && node.get($REGEX).isTextual());
+    IS_REGEX(node -> node.has($REGEX) && node.get($REGEX).isTextual()),
+    IS_CONTAINS(node -> node.has($CONTAINS) && node.get($CONTAINS).isValueNode());
 
     final Predicate<JsonNode> predicate;
 
@@ -60,7 +62,8 @@ public class DeserializerFunctions {
     GTE_DESERIALIZER((field, node) -> new GreaterThanCondition(field, true, convertValue(node.get($GTE)))),
     LT_DESERIALIZER((field, node) -> new LessThanCondition(field, false, convertValue(node.get($LT)))),
     LTE_DESERIALIZER((field, node) -> new LessThanCondition(field, true, convertValue(node.get($LTE)))),
-    REGEX_DESERIALIZER((field, node) -> new RegexCondition(field, node.get($REGEX).textValue()));
+    REGEX_DESERIALIZER((field, node) -> new RegexCondition(field, node.get($REGEX).textValue())),
+    CONTAINS_DESERIALIZER((field, node) -> new ContainsCondition(field, convertValue(node.get($CONTAINS))));
 
     final BiFunction<String, JsonNode, FieldCondition<?>> deserializer;
 

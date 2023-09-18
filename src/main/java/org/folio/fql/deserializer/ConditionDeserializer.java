@@ -40,7 +40,8 @@ public class ConditionDeserializer extends StdScalarDeserializer<FqlCondition<?>
     IS_GTE, GTE_DESERIALIZER,
     IS_LT, LT_DESERIALIZER,
     IS_LTE, LTE_DESERIALIZER,
-    IS_REGEX, REGEX_DESERIALIZER
+    IS_REGEX, REGEX_DESERIALIZER,
+    IS_CONTAINS, CONTAINS_DESERIALIZER
   );
 
   private final ObjectMapper mapper;
