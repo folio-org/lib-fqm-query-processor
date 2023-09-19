@@ -280,6 +280,26 @@ class FqlToSqlConverterTest {
   }
 
   @Test
+  void shouldGetJooqConditionForFqlNotContainsStringCondition() {
+    String fqlCondition = """
+      {"arrayField": {"$not_contains": "some value"}}
+      """;
+    Condition expectedCondition = field("arrayField").notContainsIgnoreCase("some value").or(field("arrayField").isNull());
+    Condition actualCondition = fqlToSqlConverter.getSqlCondition(fqlCondition, entityType);
+    assertEquals(expectedCondition, actualCondition);
+  }
+
+  @Test
+  void shouldGetJooqConditionForFqlNotContainsNumericCondition() {
+    String fqlCondition = """
+      {"arrayField": {"$not_contains": 10}}
+      """;
+    Condition expectedCondition = field("arrayField").notContains(10).or(field("arrayField").isNull());
+    Condition actualCondition = fqlToSqlConverter.getSqlCondition(fqlCondition, entityType);
+    assertEquals(expectedCondition, actualCondition);
+  }
+
+  @Test
   void shouldGetJooqConditionForComplexFql() {
     String complexFql = """
       {

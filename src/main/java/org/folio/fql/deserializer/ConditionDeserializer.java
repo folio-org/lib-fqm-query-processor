@@ -31,17 +31,18 @@ public class ConditionDeserializer extends StdScalarDeserializer<FqlCondition<?>
     IS_AND, AND_DESERIALIZER
   );
 
-  private static final Map<FieldPredicates, FieldDeserializers> FIELD_DESERIALIZERS = Map.of(
-    IS_EQ, EQ_DESERIALIZER,
-    IS_NE, NE_DESERIALIZER,
-    IS_IN, IN_DESERIALIZER,
-    IS_NIN, NIN_DESERIALIZER,
-    IS_GT, GT_DESERIALIZER,
-    IS_GTE, GTE_DESERIALIZER,
-    IS_LT, LT_DESERIALIZER,
-    IS_LTE, LTE_DESERIALIZER,
-    IS_REGEX, REGEX_DESERIALIZER,
-    IS_CONTAINS, CONTAINS_DESERIALIZER
+  private static final Map<FieldPredicates, FieldDeserializers> FIELD_DESERIALIZERS = Map.ofEntries(
+    Map.entry(IS_EQ, EQ_DESERIALIZER),
+    Map.entry(IS_NE, NE_DESERIALIZER),
+    Map.entry(IS_IN, IN_DESERIALIZER),
+    Map.entry(IS_NIN, NIN_DESERIALIZER),
+    Map.entry(IS_GT, GT_DESERIALIZER),
+    Map.entry(IS_GTE, GTE_DESERIALIZER),
+    Map.entry(IS_LT, LT_DESERIALIZER),
+    Map.entry(IS_LTE, LTE_DESERIALIZER),
+    Map.entry(IS_REGEX, REGEX_DESERIALIZER),
+    Map.entry(IS_CONTAINS, CONTAINS_DESERIALIZER),
+    Map.entry(IS_NOT_CONTAINS, NOT_CONTAINS_DESERIALIZER)
   );
 
   private final ObjectMapper mapper;
