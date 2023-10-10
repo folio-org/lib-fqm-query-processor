@@ -76,12 +76,11 @@ public class IdStreamer {
     return streamIdsInBatch(entityType, derivedTable, sortResults, condition, batchSize, idsConsumer);
   }
 
-  public List<UUID> getSortedIds(String tenantId, EntityType entityType,
-                                 Condition sqlWhereClause, int offset, int batchSize) {
+  public List<UUID> getSortedIds(String tenantId,
+                                 int offset, int batchSize) {
     return jooqContext.dsl()
         .select(field("result_id"))
         .from(table(metaDataRepository.getFqmSchemaName(tenantId) + ".query_results"))
-//        .where(sqlWhereClause)
         .orderBy(field("sort_seq"))
         .offset(offset)
         .limit(batchSize)

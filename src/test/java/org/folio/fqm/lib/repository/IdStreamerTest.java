@@ -77,7 +77,7 @@ class IdStreamerTest {
         .from(table("Tenant_01_mod_fqm_manager.query_results"))
         .where(field("query_id").eq(queryId))
     );
-    List<UUID> actualIds = idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit);
+    List<UUID> actualIds = idStreamer.getSortedIds(derivedTableName, offset, limit);
     assertEquals(IdStreamerTestDataProvider.TEST_CONTENT_IDS, actualIds);
   }
 

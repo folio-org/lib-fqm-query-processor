@@ -79,8 +79,8 @@ class QueryResultsSorterServiceTest {
         .where(field("query_id").eq(queryId))
     );
     List<UUID> expectedIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-    when(idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit)).thenReturn(expectedIds);
-    List<UUID> actualIds = queryResultsSorterService.getSortedIds(tenantId, queryId, derivedTableName, entityType, offset, limit);
+    when(idStreamer.getSortedIds(derivedTableName, offset, limit)).thenReturn(expectedIds);
+    List<UUID> actualIds = queryResultsSorterService.getSortedIds(tenantId, queryId, offset, limit);
     assertEquals(expectedIds, actualIds);
   }
 }
