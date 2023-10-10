@@ -77,10 +77,11 @@ public class IdStreamer {
   }
 
   public List<UUID> getSortedIds(String tenantId,
-                                 int offset, int batchSize) {
+                                 UUID queryId, int offset, int batchSize) {
     return jooqContext.dsl()
         .select(field("result_id"))
         .from(table(metaDataRepository.getFqmSchemaName(tenantId) + ".query_results"))
+        .where(field("query_id").eq(queryId))
         .orderBy(field("sort_seq"))
         .offset(offset)
         .limit(batchSize)

@@ -69,12 +69,6 @@ public class QueryResultsSorterService {
   public List<UUID> getSortedIds(String tenantId, UUID queryId,
                                  int offset, int limit) {
     log.debug("Getting sorted ids for query {}, offset {}, limit {}", queryId, offset, limit);
-    return idStreamer.getSortedIds(tenantId, offset, limit);
+    return idStreamer.getSortedIds(tenantId, queryId, offset, limit);
   }
-
-
-  // TODO: remove
-//  private String getFqmSchemaName(String tenantId) {
-//    return tenantId + "_mod_fqm_manager";
-//  }
 }
