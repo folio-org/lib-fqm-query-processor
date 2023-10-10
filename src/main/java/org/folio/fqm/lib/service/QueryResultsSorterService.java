@@ -78,7 +78,7 @@ public class QueryResultsSorterService {
         .where(field("query_id").eq(queryId))
     );
     // Sort ids based on the sort criteria defined in the entity type definition
-    return idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit);
+    return idStreamer.getSortedIds(tenantId, entityType, condition, offset, limit);
   }
 
   private String getFqmSchemaName(String tenantId) {
