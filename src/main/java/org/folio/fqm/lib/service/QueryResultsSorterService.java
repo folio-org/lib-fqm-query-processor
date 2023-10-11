@@ -4,18 +4,12 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.fqm.lib.model.IdsWithCancelCallback;
 import org.folio.fqm.lib.repository.IdStreamer;
 import org.folio.fqm.lib.repository.MetaDataRepository;
-import org.jooq.Condition;
 
 import javax.sql.DataSource;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-
-import static org.folio.fqm.lib.repository.MetaDataRepository.ID_FIELD_NAME;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.table;
 
 /**
  * Sorts the results of a query according to the default sort criteria of the entity type, and then
@@ -70,13 +64,8 @@ public class QueryResultsSorterService {
 
   public List<UUID> getSortedIds(String tenantId, UUID queryId,
                                  int offset, int limit) {
+    // Retrieve sorted ids based on the sort criteria defined in the entity type definition
     log.debug("Getting sorted ids for query {}, offset {}, limit {}", queryId, offset, limit);
-    // Sort ids based on the sort criteria defined in the entity type definition
-    // Note: This does not sort right now, due to performance concerns. Instead, it just pulls straight from query_results
-    return idStreamer.getSortedIds(getFqmSchemaName(tenantId) + ".query_results", offset, limit, queryId);
-  }
-
-  private String getFqmSchemaName(String tenantId) {
-    return tenantId + "_mod_fqm_manager";
+    return idStreamer.getSortedIds(tenantId, queryId, offset, limit);
   }
 }
