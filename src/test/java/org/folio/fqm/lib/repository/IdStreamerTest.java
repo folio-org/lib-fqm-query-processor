@@ -67,11 +67,17 @@ class IdStreamerTest {
 
   @Test
   void shouldGetSortedIds() {
-    String tenantId = "tenant_01";
     UUID queryId = UUID.randomUUID();
     int offset = 0;
     int limit = 0;
-    List<UUID> actualIds = idStreamer.getSortedIds(tenantId, queryId, offset, limit);
+    String derivedTableName = "table_01";
+    EntityType entityType = new EntityType().name("test-entity");
+    Condition condition = field(ID_FIELD_NAME).in(
+      select(field("result_id"))
+        .from(table("Tenant_01_mod_fqm_manager.query_results"))
+        .where(field("query_id").eq(queryId))
+    );
+    List<UUID> actualIds = idStreamer.getSortedIds(derivedTableName, entityType, condition, offset, limit);
     assertEquals(IdStreamerTestDataProvider.TEST_CONTENT_IDS, actualIds);
   }
 
