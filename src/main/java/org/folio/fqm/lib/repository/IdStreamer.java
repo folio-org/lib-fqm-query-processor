@@ -33,6 +33,8 @@ public class IdStreamer {
   private final FqlToSqlConverter fqlToSqlConverter;
   private final QueryDetailsRepository queryDetailsRepository;
 
+  private static final String RESULT_ID = "result_id";
+
   public IdStreamer(MetaDataRepository metaDataRepository) {
     this.jooqContext = metaDataRepository.dsl();
     this.metaDataRepository = metaDataRepository;
@@ -69,23 +71,26 @@ public class IdStreamer {
     String derivedTable = metaDataRepository.getDerivedTableName(tenantId, entityTypeId)
       .orElseThrow(() -> new EntityTypeNotFoundException(entityTypeId));
     Condition condition = field(ID_FIELD_NAME).in(
-      select(field("result_id"))
+      select(field(RESULT_ID))
         .from(table(metaDataRepository.getFqmSchemaName(tenantId) + ".query_results"))
         .where(field("query_id").eq(queryId))
     );
     return streamIdsInBatch(entityType, derivedTable, sortResults, condition, batchSize, idsConsumer);
   }
 
-  public List<UUID> getSortedIds(String derivedTableName, EntityType entityType,
-                                 Condition sqlWhereClause, int offset, int batchSize) {
+  public List<UUID> getSortedIds(String derivedTableName,
+                                  int offset, int batchSize, UUID queryId) {
+    // THIS DOES NOT PROVIDE SORTED IDs! This is a temporary workaround to address performance issues until we
+    // can do it properly
     return jooqContext.dsl()
-        .select(field(ID_FIELD_NAME))
-        .from(derivedTableName)
-        .where(sqlWhereClause)
-        .orderBy(getSortFields(entityType, true))
-        .offset(offset)
-        .limit(batchSize)
-        .fetchInto(UUID.class);
+      .select(field(RESULT_ID))
+      // NOTE: derivedTableName is <schema>.query_results here as part of the workaround
+      .from(table(derivedTableName))
+      .where(field("query_id").eq(queryId))
+      .orderBy(field(RESULT_ID))
+      .offset(offset)
+      .limit(batchSize)
+      .fetchInto(UUID.class);
     }
 
   private int streamIdsInBatch(EntityType entityType,

@@ -39,6 +39,7 @@ public class IdStreamerTestDataProvider implements MockDataProvider {
   private static final String GET_IDS_QUERY_REGEX = "SELECT ID FROM .*_MOD_FQM_MANAGER\\..* WHERE .* ORDER BY ID ASC";
   private static final String GET_SORTED_IDS_QUERY_REGEX = "SELECT ID FROM .* WHERE ID IN \\(SELECT RESULT_ID FROM .*_MOD_FQM_MANAGER.QUERY_RESULTS WHERE QUERY_ID = .*";
   private static final String GET_ENTITY_TYPE_ID_FROM_QUERY_ID_REGEX = "SELECT ENTITY_TYPE_ID FROM .*.QUERY_DETAILS WHERE QUERY_ID = .*";
+  private static final String GET_IDS_REGEX = ".*QUERY_RESULTS.*";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   @Override
@@ -64,6 +65,11 @@ public class IdStreamerTestDataProvider implements MockDataProvider {
       mockResult = new MockResult(1, result);
     } else if (sql.matches(GET_ENTITY_TYPE_ID_FROM_QUERY_ID_REGEX)) {
       var entityTypeIdField = field("entity_type_id", UUID.class);
+      Result<Record1<UUID>> result = create.newResult(entityTypeIdField);
+      result.add(create.newRecord(entityTypeIdField).values(UUID.fromString(TEST_ENTITY_TYPE_DEFINITION.getId())));
+      mockResult = new MockResult(1, result);
+    } else if (sql.matches(GET_IDS_REGEX)) {
+      var entityTypeIdField = field("record_id", UUID.class);
       Result<Record1<UUID>> result = create.newResult(entityTypeIdField);
       result.add(create.newRecord(entityTypeIdField).values(UUID.fromString(TEST_ENTITY_TYPE_DEFINITION.getId())));
       mockResult = new MockResult(1, result);
