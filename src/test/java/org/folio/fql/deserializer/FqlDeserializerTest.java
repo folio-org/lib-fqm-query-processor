@@ -5,7 +5,7 @@ import org.folio.fql.model.FqlCondition;
 import org.folio.fql.model.EqualsCondition;
 import org.folio.fql.model.InCondition;
 import org.folio.fql.model.AndCondition;
-import org.folio.fql.FqlService;
+import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

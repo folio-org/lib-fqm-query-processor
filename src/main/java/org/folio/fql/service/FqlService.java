@@ -1,8 +1,12 @@
-package org.folio.fql;
+package org.folio.fql.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.util.ArrayList;
+import java.util.List;
+import org.folio.fql.deserializer.ConditionDeserializer;
+import org.folio.fql.deserializer.FqlDeserializer;
 import org.folio.fql.deserializer.FqlParsingException;
 import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.FieldCondition;
@@ -11,11 +15,6 @@ import org.folio.fql.model.FqlCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.folio.fql.deserializer.ConditionDeserializer;
-import org.folio.fql.deserializer.FqlDeserializer;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class FqlService {

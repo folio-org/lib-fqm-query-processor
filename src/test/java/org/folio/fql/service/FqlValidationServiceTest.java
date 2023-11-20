@@ -1,4 +1,4 @@
-package org.folio.fql;
+package org.folio.fql.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
