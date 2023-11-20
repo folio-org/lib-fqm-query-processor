@@ -1,6 +1,5 @@
-package org.folio.fqm.lib.service;
+package org.folio.fql;
 
-import org.folio.fql.FqlService;
 import org.folio.fql.deserializer.FqlParsingException;
 import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.FieldCondition;
@@ -8,13 +7,18 @@ import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 import org.folio.querytool.domain.dto.EntityType;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class FqlValidationService {
 
   private final FqlService fqlService;
 
+  @Autowired
   public FqlValidationService(FqlService fqlService) {
     this.fqlService = fqlService;
   }

@@ -8,20 +8,26 @@ import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.FieldCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.folio.fql.deserializer.ConditionDeserializer;
 import org.folio.fql.deserializer.FqlDeserializer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class FqlService {
+
   private final ObjectMapper mapper;
 
   public FqlService() {
     this(getMapper());
   }
 
-  FqlService(ObjectMapper mapper) {
+  @Autowired
+  FqlService(@Value("#{fqlService.getMapper()}") ObjectMapper mapper) {
     this.mapper = mapper;
   }
 
