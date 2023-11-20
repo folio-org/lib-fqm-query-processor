@@ -21,14 +21,10 @@
     <java.version>17</java.version>
     <junit-jupiter-api.version>5.9.3</junit-jupiter-api.version>
     <folio-query-tool-metadata.version>1.0.0</folio-query-tool-metadata.version>
-    <mockito-core.version>5.3.0</mockito-core.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <org.jooq.version>3.18.4</org.jooq.version>
     <org.projectlombok.verion>1.18.28</org.projectlombok.verion>
     <org.apache.logging.log4j.version>2.20.0</org.apache.logging.log4j.version>
-    <org.apache.commons.version>4.4</org.apache.commons.version>
-    <org.postgresql.version>42.5.4</org.postgresql.version>
   </properties>
 
   <scm>
