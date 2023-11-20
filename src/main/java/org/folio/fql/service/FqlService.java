@@ -13,7 +13,6 @@ import org.folio.fql.model.FieldCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,13 +20,9 @@ public class FqlService {
 
   private final ObjectMapper mapper;
 
-  public FqlService() {
-    this(getMapper());
-  }
-
   @Autowired
-  FqlService(@Value("#{fqlService.getMapper()}") ObjectMapper mapper) {
-    this.mapper = mapper;
+  public FqlService() {
+    this.mapper = getMapper();
   }
 
   public Fql getFql(String fqlCriteria) {
