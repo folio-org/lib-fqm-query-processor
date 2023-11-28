@@ -1,28 +1,18 @@
-package org.folio.fqm.lib.service;
+package org.folio.fql.service;
 
-import org.folio.fql.FqlService;
-import org.folio.fqm.lib.repository.MetaDataRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Map;
+
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
 import org.folio.querytool.domain.dto.StringType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 class FqlValidationServiceTest {
-
-  private static final String TENANT_ID = "tenant_01";
-
-  private static final UUID ENTITY_TYPE_ID = UUID.randomUUID();
 
   private static final EntityType entityType = new EntityType()
     .name("test_entity_type")
@@ -38,9 +28,7 @@ class FqlValidationServiceTest {
 
   @BeforeEach
   public void setup() {
-    MetaDataRepository metaDataRepository = mock(MetaDataRepository.class);
     this.fqlValidationService = new FqlValidationService(new FqlService());
-    when(metaDataRepository.getEntityTypeDefinition(TENANT_ID, ENTITY_TYPE_ID)).thenReturn(Optional.of(entityType));
   }
 
   @Test

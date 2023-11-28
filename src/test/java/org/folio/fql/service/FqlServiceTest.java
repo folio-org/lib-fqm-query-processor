@@ -1,4 +1,4 @@
-package org.folio.fql;
+package org.folio.fql.service;
 
 import org.folio.fql.model.*;
 import org.junit.jupiter.api.BeforeEach;

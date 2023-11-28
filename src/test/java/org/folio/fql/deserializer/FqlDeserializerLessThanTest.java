@@ -3,7 +3,7 @@ package org.folio.fql.deserializer;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 import org.folio.fql.model.LessThanCondition;
-import org.folio.fql.FqlService;
+import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

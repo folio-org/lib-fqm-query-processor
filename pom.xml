@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.1.2</version>
+    <relativePath /> <!-- lookup parent from repository -->
+  </parent>
   <groupId>org.folio</groupId>
   <artifactId>lib-fqm-query-processor</artifactId>
   <version>1.1.0-SNAPSHOT</version>
@@ -15,14 +21,10 @@
     <java.version>17</java.version>
     <junit-jupiter-api.version>5.9.3</junit-jupiter-api.version>
     <folio-query-tool-metadata.version>1.0.0</folio-query-tool-metadata.version>
-    <mockito-core.version>5.3.0</mockito-core.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <org.jooq.version>3.18.4</org.jooq.version>
     <org.projectlombok.verion>1.18.28</org.projectlombok.verion>
     <org.apache.logging.log4j.version>2.20.0</org.apache.logging.log4j.version>
-    <org.apache.commons.version>4.4</org.apache.commons.version>
-    <org.postgresql.version>42.5.4</org.postgresql.version>
   </properties>
 
   <scm>
@@ -179,12 +181,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>${mockito-core.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
@@ -198,19 +194,23 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.jooq</groupId>
-      <artifactId>jooq</artifactId>
-      <version>${org.jooq.version}</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
-      <version>${org.apache.commons.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>${org.postgresql.version}</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.junit.vintage</groupId>
+          <artifactId>junit-vintage-engine</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>
