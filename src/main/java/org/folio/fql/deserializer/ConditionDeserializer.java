@@ -42,7 +42,8 @@ public class ConditionDeserializer extends StdScalarDeserializer<FqlCondition<?>
     Map.entry(IS_LTE, LTE_DESERIALIZER),
     Map.entry(IS_REGEX, REGEX_DESERIALIZER),
     Map.entry(IS_CONTAINS, CONTAINS_DESERIALIZER),
-    Map.entry(IS_NOT_CONTAINS, NOT_CONTAINS_DESERIALIZER)
+    Map.entry(IS_NOT_CONTAINS, NOT_CONTAINS_DESERIALIZER),
+    Map.entry(IS_EMPTY, EMPTY_DESERIALIZER)
   );
 
   private final ObjectMapper mapper;
