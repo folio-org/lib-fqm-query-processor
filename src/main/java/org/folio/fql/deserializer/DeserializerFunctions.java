@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static org.folio.fql.model.ContainsCondition.$CONTAINS;
+import static org.folio.fql.model.EmptyCondition.$EMPTY;
 import static org.folio.fql.model.EqualsCondition.$EQ;
 import static org.folio.fql.model.NotEqualsCondition.$NE;
 import static org.folio.fql.model.GreaterThanCondition.$GT;
@@ -36,7 +37,8 @@ public class DeserializerFunctions {
     IS_LTE(node -> node.has($LTE) && node.get($LTE).isValueNode()),
     IS_REGEX(node -> node.has($REGEX) && node.get($REGEX).isTextual()),
     IS_CONTAINS(node -> node.has($CONTAINS) && node.get($CONTAINS).isValueNode()),
-    IS_NOT_CONTAINS(node -> node.has($NOT_CONTAINS) && node.get($NOT_CONTAINS).isValueNode());
+    IS_NOT_CONTAINS(node -> node.has($NOT_CONTAINS) && node.get($NOT_CONTAINS).isValueNode()),
+    IS_EMPTY(node -> node.has($EMPTY) && node.get($EMPTY).isBoolean());
 
     final Predicate<JsonNode> predicate;
 
@@ -66,7 +68,8 @@ public class DeserializerFunctions {
     LTE_DESERIALIZER((field, node) -> new LessThanCondition(field, true, convertValue(node.get($LTE)))),
     REGEX_DESERIALIZER((field, node) -> new RegexCondition(field, node.get($REGEX).textValue())),
     CONTAINS_DESERIALIZER((field, node) -> new ContainsCondition(field, convertValue(node.get($CONTAINS)))),
-    NOT_CONTAINS_DESERIALIZER((field, node) -> new NotContainsCondition(field, convertValue(node.get($NOT_CONTAINS))));
+    NOT_CONTAINS_DESERIALIZER((field, node) -> new NotContainsCondition(field, convertValue(node.get($NOT_CONTAINS)))),
+    EMPTY_DESERIALIZER((field, node) -> new EmptyCondition(field, convertValue(node.get($EMPTY))));
 
     final BiFunction<String, JsonNode, FieldCondition<?>> deserializer;
 
