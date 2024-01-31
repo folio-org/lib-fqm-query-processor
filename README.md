@@ -131,6 +131,14 @@ Example:
 {"field1": {"$not_contains": "value1"}}
 ```
 
+### $empty
+Can be true or false. If true, returns all records for which the specified column is null or empty. If false, returns all records for which the specified column is not null or empty.
+
+Example:
+```json
+{"field1": {"$empty": true}}
+```
+
 ### $regex
 Provides regular expression capabilities for pattern matching strings in queries. At present, only the following two
 patterns are supported.
