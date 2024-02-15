@@ -3,6 +3,7 @@ package org.folio.fql.deserializer;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 import org.folio.fql.model.RegexCondition;
+import org.folio.fql.model.field.FqlField;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class FqlDeserializerRegExTest {
       """
          {"field1": {"$regex": ".*value.*"}}
         """;
-    FqlCondition<?> fqlCondition = new RegexCondition("field1", ".*value.*");
+    FqlCondition<?> fqlCondition = new RegexCondition(new FqlField("field1"), ".*value.*");
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import org.folio.fql.model.FqlCondition;
 import org.folio.fql.model.FieldCondition;
 import org.folio.fql.model.LogicalCondition;
+import org.folio.fql.model.field.FqlField;
 
 import java.io.IOException;
 import java.util.Map;
@@ -65,7 +66,8 @@ public class ConditionDeserializer extends StdScalarDeserializer<FqlCondition<?>
     }
 
     if (isFieldCondition(childNode)) {
-      return getFieldCondition(fieldName, childNode);
+      FqlField field = new FqlField(fieldName);
+      return getFieldCondition(field, childNode);
     }
 
     throw new FqlParsingException(fieldName, String.format(INVALID_OPERATOR_MESSAGE, childNode.toString()));
@@ -93,13 +95,13 @@ public class ConditionDeserializer extends StdScalarDeserializer<FqlCondition<?>
       .orElseThrow(() -> new FqlParsingException(fieldName, String.format(INVALID_OPERATOR_MESSAGE, node.toString())));
   }
 
-  private FieldCondition<?> getFieldCondition(String fieldName, JsonNode node) {
+  private FieldCondition<?> getFieldCondition(FqlField field, JsonNode node) {
     return FIELD_DESERIALIZERS.keySet()
       .stream()
       .filter(p -> p.predicate.test(node))
       .map(FIELD_DESERIALIZERS::get)
-      .map(d -> d.deserializer.apply(fieldName, node))
+      .map(d -> d.deserializer.apply(field, node))
       .findFirst()
-      .orElseThrow(() -> new FqlParsingException(fieldName, String.format(INVALID_OPERATOR_MESSAGE, node.toString())));
+      .orElseThrow(() -> new FqlParsingException(field.serialize(), String.format(INVALID_OPERATOR_MESSAGE, node.toString())));
   }
 }

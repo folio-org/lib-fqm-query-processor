@@ -15,6 +15,33 @@ mvn clean install
 ## FQL Language Syntax
 FQL uses a light version of MongoDB query syntax. The supported operators are described below.
 
+### Field names
+
+Field names can represent a column itself (most typical), or a nested JSON object/array.
+For example, the following field names are valid:
+
+- `field1`: represents a column named `field1`
+- `field2->inner`: represents the property named `field2` nested within a column named `field2`
+- `field3[*]->inner`: represents the property named `field2` nested within any item of the column `field3`
+
+For these examples, example contents of each field could be:
+
+- `field1`: `value1`, `value2`, `value3`, `[0, 2, 4, 7]`, `["foo", "bar", "baz"]`
+- `field2`: `{"inner": "value1"}`, `{"inner": "value2"}`, `{"inner": "value3"}`
+- `field3`: `[{"inner": "value1"}, {"inner": "value2"}, {"inner": "value3"}]`, `[]`
+
+Note that arrays containing primitive types (not objects) should **not** be queried using this syntax; instead, they should
+be queried using the `$contains` and `$not_contains` array operators.
+
+A formal definition of the FQL field name is below:
+
+```
+field_name  ::= column_name |
+                column_name '->' field_name |
+                column_name '[*]' '->' field_name
+column_name ::= [a-zA-Z_][a-zA-Z0-9_]*
+```
+
 ### $eq
 Match values that are equal to a specified value. String comparison is done in a case-insensitive manner. Supports
 string, number, boolean, date and uuid types.

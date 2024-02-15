@@ -3,7 +3,6 @@ package org.folio.fql.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import java.util.ArrayList;
 import java.util.List;
 import org.folio.fql.deserializer.ConditionDeserializer;
 import org.folio.fql.deserializer.FqlDeserializer;
@@ -12,6 +11,7 @@ import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.FieldCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
+import org.folio.fql.model.field.FqlField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,17 +33,17 @@ public class FqlService {
     }
   }
 
-  public List<String> getFqlFields(Fql fql) {
+  public List<FqlField> getFqlFields(Fql fql) {
     FqlCondition<?> fqlCondition = fql.fqlCondition();
+
     if (fqlCondition instanceof AndCondition andCondition) {
-      List<String> fields = new ArrayList<>();
-      andCondition
+      return andCondition
         .value()
-        .forEach(cnd -> fields.add(((FieldCondition<?>) cnd).fieldName()));
-      return fields;
+        .stream().map(cnd -> ((FieldCondition<?>) cnd).field()).toList();
     }
+
     FieldCondition<?> fieldCondition = (FieldCondition<?>) fqlCondition;
-    return List.of(fieldCondition.fieldName());
+    return List.of(fieldCondition.field());
   }
 
   private static ObjectMapper getMapper() {

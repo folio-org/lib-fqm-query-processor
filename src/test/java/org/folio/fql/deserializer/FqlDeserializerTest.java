@@ -4,6 +4,7 @@ import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 import org.folio.fql.model.EqualsCondition;
 import org.folio.fql.model.InCondition;
+import org.folio.fql.model.field.FqlField;
 import org.folio.fql.model.AndCondition;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,21 +38,23 @@ class FqlDeserializerTest {
                                 {"field4" : {"$eq": false}}
                             ]
                        },
-                       {"field5" : {"$in": ["value1", 2, false]}}
+                       {"field5" : {"$in": ["value1", 2, false]}},
+                       {"field6->nested" : {"$eq": "nested value"}}
                ]
             }
         """;
     List<Object> inValues = List.of("value1", 2, false);
     List<FqlCondition<?>> innerFqlConditions = List.of(
-      new EqualsCondition("field3", "another value"),
-      new EqualsCondition("field4", false)
+      new EqualsCondition(new FqlField("field3"), "another value"),
+      new EqualsCondition(new FqlField("field4"), false)
     );
     AndCondition innerAndCondition = new AndCondition(innerFqlConditions);
     List<FqlCondition<?>> outerFqlConditions = List.of(
-      new EqualsCondition("field1", "some value"),
-      new EqualsCondition("field2", 2),
+      new EqualsCondition(new FqlField("field1"), "some value"),
+      new EqualsCondition(new FqlField("field2"), 2),
       innerAndCondition,
-      new InCondition("field5", inValues)
+      new InCondition(new FqlField("field5"), inValues),
+      new EqualsCondition(new FqlField("field6->nested"), "nested value")
     );
     AndCondition outerAndCondition = new AndCondition(outerFqlConditions);
     Fql expectedFql = new Fql(outerAndCondition);

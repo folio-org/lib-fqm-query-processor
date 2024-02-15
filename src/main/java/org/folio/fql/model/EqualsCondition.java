@@ -1,5 +1,7 @@
 package org.folio.fql.model;
 
-public record EqualsCondition(String fieldName, Object value) implements FieldCondition<Object> {
+import org.folio.fql.model.field.FqlField;
+
+public record EqualsCondition(FqlField field, Object value) implements FieldCondition<Object> {
   public static final String $EQ = "$eq";
 }

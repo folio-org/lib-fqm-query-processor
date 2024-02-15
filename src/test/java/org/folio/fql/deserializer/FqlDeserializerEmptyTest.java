@@ -1,9 +1,9 @@
 package org.folio.fql.deserializer;
 
 import org.folio.fql.model.EmptyCondition;
-import org.folio.fql.model.EqualsCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
+import org.folio.fql.model.field.FqlField;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ class FqlDeserializerEmptyTest {
       """
          {"field1": {"$empty": true}}
         """;
-    FqlCondition<?> fqlCondition = new EmptyCondition("field1", true);
+    FqlCondition<?> fqlCondition = new EmptyCondition(new FqlField("field1"), true);
     Fql expectedFql = new Fql(fqlCondition);Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -37,7 +37,7 @@ class FqlDeserializerEmptyTest {
       """
          {"field1": {"$empty": false}}
         """;
-    FqlCondition<?> fqlCondition = new EmptyCondition("field1", false);
+    FqlCondition<?> fqlCondition = new EmptyCondition(new FqlField("field1"), false);
     Fql expectedFql = new Fql(fqlCondition);Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }

@@ -3,6 +3,7 @@ package org.folio.fql.deserializer;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 import org.folio.fql.model.NotInCondition;
+import org.folio.fql.model.field.FqlField;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class FqlDeserializerNotInTest {
       """
         {"field1": {"$nin": ["value1", 11, false ] }}
         """;
-    FqlCondition<?> fqlCondition = new NotInCondition("field1", List.of("value1", 11, false));
+    FqlCondition<?> fqlCondition = new NotInCondition(new FqlField("field1"), List.of("value1", 11, false));
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleNotInConditionJson);
     assertEquals(expectedFql, actualFql);
