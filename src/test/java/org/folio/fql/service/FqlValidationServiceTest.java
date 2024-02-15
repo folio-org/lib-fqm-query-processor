@@ -153,6 +153,9 @@ class FqlValidationServiceTest {
   static List<Arguments> nestedFieldValidityParameters() {
     return List.of(
       Arguments.of("foo->bar", false),
+      Arguments.of("field1->foo", false),
+      Arguments.of("field1[*]", false),
+      Arguments.of("field1[*]->foo", false),
       Arguments.of("objectField", true),
       Arguments.of("objectField->property1", true),
       Arguments.of("objectField->property1->foo", false),
