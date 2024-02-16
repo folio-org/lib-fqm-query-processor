@@ -2,7 +2,22 @@ package org.folio.fql.deserializer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.folio.fql.model.*;
+
+import org.folio.fql.model.AndCondition;
+import org.folio.fql.model.ContainsCondition;
+import org.folio.fql.model.EmptyCondition;
+import org.folio.fql.model.EqualsCondition;
+import org.folio.fql.model.FieldCondition;
+import org.folio.fql.model.FqlCondition;
+import org.folio.fql.model.GreaterThanCondition;
+import org.folio.fql.model.InCondition;
+import org.folio.fql.model.LessThanCondition;
+import org.folio.fql.model.LogicalCondition;
+import org.folio.fql.model.NotContainsCondition;
+import org.folio.fql.model.NotEqualsCondition;
+import org.folio.fql.model.NotInCondition;
+import org.folio.fql.model.RegexCondition;
+import org.folio.fql.model.field.FqlField;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -71,9 +86,9 @@ public class DeserializerFunctions {
     NOT_CONTAINS_DESERIALIZER((field, node) -> new NotContainsCondition(field, convertValue(node.get($NOT_CONTAINS)))),
     EMPTY_DESERIALIZER((field, node) -> new EmptyCondition(field, convertValue(node.get($EMPTY))));
 
-    final BiFunction<String, JsonNode, FieldCondition<?>> deserializer;
+    final BiFunction<FqlField, JsonNode, FieldCondition<?>> deserializer;
 
-    FieldDeserializers(BiFunction<String, JsonNode, FieldCondition<?>> deserializer) {
+    FieldDeserializers(BiFunction<FqlField, JsonNode, FieldCondition<?>> deserializer) {
       this.deserializer = deserializer;
     }
 

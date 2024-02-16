@@ -3,6 +3,7 @@ package org.folio.fql.deserializer;
 import org.folio.fql.model.ContainsCondition;
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
+import org.folio.fql.model.field.FqlField;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FqlDeserializerContainsTest {
+class FqlDeserializerContainsTest {
 
   private FqlService fqlService;
 
@@ -25,7 +26,7 @@ public class FqlDeserializerContainsTest {
       """
          {"arrayField1": {"$contains": "value"}}
         """;
-    FqlCondition<?> fqlCondition = new ContainsCondition("arrayField1", "value");
+    FqlCondition<?> fqlCondition = new ContainsCondition(new FqlField("arrayField1"), "value");
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleContainsJson);
     assertEquals(expectedFql, actualFql);
@@ -37,7 +38,7 @@ public class FqlDeserializerContainsTest {
       """
         {"arrayField1": {"$contains": 11}}
         """;
-    FqlCondition<?> fqlCondition = new ContainsCondition("arrayField1", 11);
+    FqlCondition<?> fqlCondition = new ContainsCondition(new FqlField("arrayField1"), 11);
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleContainsJson);
     assertEquals(expectedFql, actualFql);

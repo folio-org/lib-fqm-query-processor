@@ -1,5 +1,7 @@
 package org.folio.fql.model;
 
-public record EmptyCondition(String fieldName, Object value) implements FieldCondition<Object> {
+import org.folio.fql.model.field.FqlField;
+
+public record EmptyCondition(FqlField field, Object value) implements FieldCondition<Object> {
   public static final String $EMPTY = "$empty";
 }

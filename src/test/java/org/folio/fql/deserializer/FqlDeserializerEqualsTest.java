@@ -2,6 +2,7 @@ package org.folio.fql.deserializer;
 
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
+import org.folio.fql.model.field.FqlField;
 import org.folio.fql.model.EqualsCondition;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,7 @@ class FqlDeserializerEqualsTest {
       """
          {"field1": {"$eq": "value"}}
         """;
-    FqlCondition<?> fqlCondition = new EqualsCondition("field1", "value");
+    FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), "value");
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
@@ -37,7 +38,7 @@ class FqlDeserializerEqualsTest {
       """
         {"field1": {"$eq": true}}
         """;
-    FqlCondition<?> fqlCondition = new EqualsCondition("field1", true);
+    FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), true);
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleBooleanJson);
     assertEquals(expectedFql, actualFql);
@@ -49,7 +50,7 @@ class FqlDeserializerEqualsTest {
       """
         {"field1": {"$eq": 11}}
         """;
-    FqlCondition<?> fqlCondition = new EqualsCondition("field1", 11);
+    FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), 11);
     Fql expectedFql = new Fql(fqlCondition);
     Fql actualFql = fqlService.getFql(simpleIntegerJson);
     assertEquals(expectedFql, actualFql);

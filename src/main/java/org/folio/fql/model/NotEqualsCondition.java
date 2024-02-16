@@ -1,5 +1,7 @@
 package org.folio.fql.model;
 
-public record NotEqualsCondition(String fieldName, Object value) implements FieldCondition<Object> {
+import org.folio.fql.model.field.FqlField;
+
+public record NotEqualsCondition(FqlField field, Object value) implements FieldCondition<Object> {
   public static final String $NE = "$ne";
 }
