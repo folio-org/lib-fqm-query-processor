@@ -38,7 +38,7 @@ A formal definition of the FQL field name is below:
 ```
 field_name  ::= column_name |
                 column_name '->' field_name |
-                column_name '[*]' '->' field_name
+                column_name '[*]'* '->' field_name
 column_name ::= [a-zA-Z_][a-zA-Z0-9_]*
 ```
 
