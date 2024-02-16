@@ -1,11 +1,10 @@
 package org.folio.fql.model.field;
 
-import org.folio.fql.deserializer.FqlParsingException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Value;
+import org.folio.fql.deserializer.FqlParsingException;
 
 @Value
 public class FqlField {
@@ -26,6 +25,7 @@ public class FqlField {
     }
   }
 
+  /** Finds the first [*] or -> in the string; if none, it returns -1 */
   private static int getIndexOfSubfield(String str) {
     int firstArrayIndex = str.indexOf("[*]");
     int firstPropertyIndex = str.indexOf("->");
