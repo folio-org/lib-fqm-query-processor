@@ -19,6 +19,7 @@ import org.folio.querytool.domain.dto.ArrayType;
 import org.folio.querytool.domain.dto.EntityDataType;
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
+import org.folio.querytool.domain.dto.Field;
 import org.folio.querytool.domain.dto.NestedObjectProperty;
 import org.folio.querytool.domain.dto.ObjectType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,58 +54,61 @@ public class FqlValidationService {
     } else {
       FqlField field = ((FieldCondition<?>) fqlCondition).field();
 
-      entityType
-        .getColumns()
-        .stream()
-        .filter(col -> checkColumnMatch(field, col))
-        .findFirst()
+      findFieldDefinition(field, entityType)
         .ifPresentOrElse(
           value -> {},
-          () -> {
-            String fieldName = field.serialize();
-            errorMap.put(
-              fieldName,
-              "Field " + fieldName + " is not present in definition of entity type " + entityType.getName()
-            );
-          }
+          () -> errorMap.put(
+            field.serialize(),
+            "Field " + field.serialize() + " is not present in definition of entity type " + entityType.getName()
+          )
         );
     }
     return errorMap;
   }
 
-  public static boolean checkColumnMatch(FqlField field, EntityTypeColumn col) {
-    if (!col.getName().equals(field.getColumnName())) {
-      return false;
+  /** Get the Field (entity type column or nested property) based on a FQL field */
+  public static Optional<Field> findFieldDefinition(FqlField search, EntityType entityType) {
+    EntityTypeColumn column = entityType.getColumns().stream()
+      .filter(col -> col.getName().equals(search.getColumnName()))
+      .findFirst()
+      .orElse(null);
+
+    if (column == null) {
+      return Optional.empty();
     }
 
-    Deque<SubField> subFields = new ArrayDeque<>(field.getSubFields());
-    EntityDataType dataType = col.getDataType();
+    Deque<SubField> subFields = new ArrayDeque<>(search.getSubFields());
+    Field curField = column;
+    EntityDataType curDataType = column.getDataType();
 
     while (!subFields.isEmpty()) {
       SubField subField = subFields.pop();
       if (subField instanceof ArraySubField) {
-        if (dataType instanceof ArrayType arrayDataType) {
-          dataType = arrayDataType.getItemDataType();
+        if (curDataType instanceof ArrayType arrayDataType) {
+          // we can assume that an array subfield will be followed by a property (enforced in FqlField parser)
+          // therefore, we don't need to worry about curField not being set here
+          curDataType = arrayDataType.getItemDataType();
         } else {
-          return false;
+          return Optional.empty();
         }
       } else if (subField instanceof PropertySubField propertySubField) {
-        if (dataType instanceof ObjectType objectDataType) {
+        if (curDataType instanceof ObjectType objectDataType) {
           Optional<NestedObjectProperty> nestedProperty = objectDataType.getProperties().stream()
             .filter(subCol -> subCol.getName().equals(propertySubField.propertyName()))
             .findFirst();
 
           if (nestedProperty.isPresent()) {
-            dataType = nestedProperty.get().getDataType();
+            curDataType = nestedProperty.get().getDataType();
+            curField = nestedProperty.get();
           } else {
-            return false;
+            return Optional.empty();
           }
         } else {
-          return false;
+          return Optional.empty();
         }
       }
     }
 
-    return true;
+    return Optional.of(curField);
   }
 }
