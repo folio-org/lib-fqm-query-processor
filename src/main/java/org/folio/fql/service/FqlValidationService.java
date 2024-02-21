@@ -109,6 +109,12 @@ public class FqlValidationService {
       }
     }
 
-    return Optional.of(curField);
+    return Optional.of(curField).map(field -> {
+      if (field.getIdColumnName() != null) {
+        return findFieldDefinition(new FqlField(field.getIdColumnName()), entityType).orElse(null);
+      } else {
+        return field;
+      }
+    });
   }
 }
