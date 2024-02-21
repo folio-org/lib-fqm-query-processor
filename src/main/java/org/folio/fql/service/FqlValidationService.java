@@ -109,9 +109,13 @@ public class FqlValidationService {
       }
     }
 
-    return Optional.of(curField).map(field -> {
+    return Optional.of(curField);
+  }
+
+  public static Optional<Field> findFieldDefinitionForQuerying(FqlField search, EntityType entityType) {
+    return findFieldDefinition(search, entityType).map(field -> {
       if (field.getIdColumnName() != null) {
-        return findFieldDefinition(new FqlField(field.getIdColumnName()), entityType).orElse(null);
+        return findFieldDefinitionForQuerying(new FqlField(field.getIdColumnName()), entityType).orElse(null);
       } else {
         return field;
       }

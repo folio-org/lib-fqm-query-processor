@@ -224,7 +224,7 @@ class FqlValidationServiceTest {
   void testIdColumnResolution(String search, String expectedResolution) {
     assertEquals(
       FqlValidationService.findFieldDefinition(new FqlField(expectedResolution), entityType).get(),
-      FqlValidationService.findFieldDefinition(new FqlField(search), entityType).get()
+      FqlValidationService.findFieldDefinitionForQuerying(new FqlField(search), entityType).get()
     );
   }
 
@@ -238,6 +238,6 @@ class FqlValidationServiceTest {
   @ParameterizedTest
   @MethodSource("idColumnResolutionNonexistentParameters")
   void testIdColumnResolutionNonexistent(String search) {
-    assertTrue(FqlValidationService.findFieldDefinition(new FqlField(search), entityType).isEmpty());
+    assertTrue(FqlValidationService.findFieldDefinitionForQuerying(new FqlField(search), entityType).isEmpty());
   }
 }
