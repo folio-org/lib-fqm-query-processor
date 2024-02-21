@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 
+import org.folio.fql.model.field.FqlField;
 import org.folio.querytool.domain.dto.ArrayType;
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
@@ -27,7 +28,12 @@ class FqlValidationServiceTest {
         new EntityTypeColumn().name("field1").dataType(new StringType()),
         new EntityTypeColumn().name("field2").dataType(new StringType()),
         new EntityTypeColumn().name("field3").dataType(new StringType()),
-        new EntityTypeColumn().name("objectField").dataType(new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1"))),
+        new EntityTypeColumn().name("objectField").dataType(
+          new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1"))
+            .addPropertiesItem(new NestedObjectProperty().name("hasValidIdColumn").idColumnName("field1"))
+            .addPropertiesItem(new NestedObjectProperty().name("hasInvalidIdColumn").idColumnName("does-not-exist"))
+            .addPropertiesItem(new NestedObjectProperty().name("hasNestedIdColumn").idColumnName("objectField->property1"))
+        ),
         new EntityTypeColumn().name("objectObjectField").dataType(
           new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1").dataType(
             new ObjectType().addPropertiesItem(new NestedObjectProperty().name("innerProperty1"))
@@ -52,7 +58,9 @@ class FqlValidationServiceTest {
               new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1"))
             )
           )
-        )
+        ),
+        new EntityTypeColumn().name("hasValidIdColumn").dataType(new StringType()).idColumnName("field1"),
+        new EntityTypeColumn().name("hasInvalidIdColumn").dataType(new StringType()).idColumnName("does-not-exist")
       )
     );
 
@@ -201,5 +209,35 @@ class FqlValidationServiceTest {
   void testNestedFieldValidity(String fieldName, boolean expectedValidity) {
     Map<String, String> actualErrors = fqlValidationService.validateFql(entityType, "{ \"%s\": { \"$eq\": true } }".formatted(fieldName));
     assertEquals(expectedValidity, actualErrors.isEmpty());
+  }
+
+  static List<Arguments> idColumnResolutionParameters() {
+    return List.of(
+      Arguments.of("hasValidIdColumn", "field1"),
+      Arguments.of("objectField->hasValidIdColumn", "field1"),
+      Arguments.of("objectField->hasNestedIdColumn", "objectField->property1")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("idColumnResolutionParameters")
+  void testIdColumnResolution(String search, String expectedResolution) {
+    assertEquals(
+      FqlValidationService.findFieldDefinition(new FqlField(expectedResolution), entityType).get(),
+      FqlValidationService.findFieldDefinitionForQuerying(new FqlField(search), entityType).get()
+    );
+  }
+
+  static List<Arguments> idColumnResolutionNonexistentParameters() {
+    return List.of(
+      Arguments.of("hasInvalidIdColumn"),
+      Arguments.of("objectField->hasInvalidIdColumn")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("idColumnResolutionNonexistentParameters")
+  void testIdColumnResolutionNonexistent(String search) {
+    assertTrue(FqlValidationService.findFieldDefinitionForQuerying(new FqlField(search), entityType).isEmpty());
   }
 }
