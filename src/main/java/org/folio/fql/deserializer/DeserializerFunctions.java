@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.folio.fql.model.AndCondition;
-import org.folio.fql.model.ContainsCondition;
+import org.folio.fql.model.ContainsAllCondition;
 import org.folio.fql.model.EmptyCondition;
 import org.folio.fql.model.EqualsCondition;
 import org.folio.fql.model.FieldCondition;
@@ -13,7 +13,7 @@ import org.folio.fql.model.GreaterThanCondition;
 import org.folio.fql.model.InCondition;
 import org.folio.fql.model.LessThanCondition;
 import org.folio.fql.model.LogicalCondition;
-import org.folio.fql.model.NotContainsCondition;
+import org.folio.fql.model.NotContainsAllCondition;
 import org.folio.fql.model.NotEqualsCondition;
 import org.folio.fql.model.NotInCondition;
 import org.folio.fql.model.RegexCondition;
@@ -26,7 +26,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static org.folio.fql.model.ContainsCondition.$CONTAINS;
+import static org.folio.fql.model.ContainsAllCondition.$CONTAINS_ALL;
+import static org.folio.fql.model.NotContainsAllCondition.$NOT_CONTAINS_ALL;
 import static org.folio.fql.model.EmptyCondition.$EMPTY;
 import static org.folio.fql.model.EqualsCondition.$EQ;
 import static org.folio.fql.model.NotEqualsCondition.$NE;
@@ -36,7 +37,6 @@ import static org.folio.fql.model.LessThanCondition.$LT;
 import static org.folio.fql.model.LessThanCondition.$LTE;
 import static org.folio.fql.model.InCondition.$IN;
 import static org.folio.fql.model.NotInCondition.$NIN;
-import static org.folio.fql.model.NotContainsCondition.$NOT_CONTAINS;
 import static org.folio.fql.model.RegexCondition.$REGEX;
 import static org.folio.fql.model.AndCondition.$AND;
 
@@ -51,8 +51,8 @@ public class DeserializerFunctions {
     IS_LT(node -> node.has($LT) && node.get(LessThanCondition.$LT).isValueNode()),
     IS_LTE(node -> node.has($LTE) && node.get($LTE).isValueNode()),
     IS_REGEX(node -> node.has($REGEX) && node.get($REGEX).isTextual()),
-    IS_CONTAINS(node -> node.has($CONTAINS) && node.get($CONTAINS).isValueNode()),
-    IS_NOT_CONTAINS(node -> node.has($NOT_CONTAINS) && node.get($NOT_CONTAINS).isValueNode()),
+    IS_CONTAINS_ALL(node -> node.has($CONTAINS_ALL) && node.get($CONTAINS_ALL).isArray()),
+    IS_NOT_CONTAINS_ALL(node -> node.has($NOT_CONTAINS_ALL) && node.get($NOT_CONTAINS_ALL).isArray()),
     IS_EMPTY(node -> node.has($EMPTY) && node.get($EMPTY).isBoolean());
 
     final Predicate<JsonNode> predicate;
@@ -82,8 +82,8 @@ public class DeserializerFunctions {
     LT_DESERIALIZER((field, node) -> new LessThanCondition(field, false, convertValue(node.get($LT)))),
     LTE_DESERIALIZER((field, node) -> new LessThanCondition(field, true, convertValue(node.get($LTE)))),
     REGEX_DESERIALIZER((field, node) -> new RegexCondition(field, node.get($REGEX).textValue())),
-    CONTAINS_DESERIALIZER((field, node) -> new ContainsCondition(field, convertValue(node.get($CONTAINS)))),
-    NOT_CONTAINS_DESERIALIZER((field, node) -> new NotContainsCondition(field, convertValue(node.get($NOT_CONTAINS)))),
+    CONTAINS_ALL_DESERIALIZER((field, node) -> new ContainsAllCondition(field, getValues(node.get($CONTAINS_ALL).elements(), FieldDeserializers::convertValue))),
+    NOT_CONTAINS_ALL_DESERIALIZER((field, node) -> new NotContainsAllCondition(field, getValues(node.get($NOT_CONTAINS_ALL).elements(), FieldDeserializers::convertValue))),
     EMPTY_DESERIALIZER((field, node) -> new EmptyCondition(field, convertValue(node.get($EMPTY))));
 
     final BiFunction<FqlField, JsonNode, FieldCondition<?>> deserializer;
