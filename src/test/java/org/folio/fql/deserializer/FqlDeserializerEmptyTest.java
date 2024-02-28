@@ -7,6 +7,11 @@ import org.folio.fql.model.field.FqlField;
 import org.folio.fql.service.FqlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,25 +25,39 @@ class FqlDeserializerEmptyTest {
     fqlService = new FqlService();
   }
 
-  @Test
-  void shouldGetSimpleEmptyCondition() {
-    String simpleStringJson =
-      """
-         {"field1": {"$empty": true}}
-        """;
-    FqlCondition<?> fqlCondition = new EmptyCondition(new FqlField("field1"), true);
-    Fql expectedFql = new Fql(fqlCondition);Fql actualFql = fqlService.getFql(simpleStringJson);
-    assertEquals(expectedFql, actualFql);
+  static List<Arguments> emptyConditionsSource() {
+    return List.of(
+      Arguments.of(
+        "empty with boolean value",
+        """
+        {"field1": {"$empty": true}}""",
+        new Fql(new EmptyCondition(new FqlField("field1"), true))
+      ),
+      Arguments.of(
+        "not empty with boolean value",
+        """
+        {"field1": {"$empty": false}}""",
+        new Fql(new EmptyCondition(new FqlField("field1"), false))
+      ),
+      Arguments.of(
+        "empty with string value",
+        """
+        {"field1": {"$empty": "true"}}""",
+        new Fql(new EmptyCondition(new FqlField("field1"), true))
+      ),
+      Arguments.of(
+        "not empty with string value",
+          """
+          {"field1": {"$empty": "false"}}""",
+        new Fql(new EmptyCondition(new FqlField("field1"), false))
+      )
+    );
   }
 
-  @Test
-  void shouldGetSimpleNotEmptyCondition() {
-    String simpleStringJson =
-      """
-         {"field1": {"$empty": false}}
-        """;
-    FqlCondition<?> fqlCondition = new EmptyCondition(new FqlField("field1"), false);
-    Fql expectedFql = new Fql(fqlCondition);Fql actualFql = fqlService.getFql(simpleStringJson);
+  @ParameterizedTest
+  @MethodSource("emptyConditionsSource")
+  void shouldGetEmptyConditionForFqlString(String label, String fqlString, Fql expectedFql) {
+    Fql actualFql = fqlService.getFql(fqlString);
     assertEquals(expectedFql, actualFql);
   }
 
@@ -46,7 +65,7 @@ class FqlDeserializerEmptyTest {
   void shouldThrowExceptionWhenEmptyConditionIsNotBoolean() {
     String invalidEqualsConditionJson =
       """
-        {"field1": {"$empty": "maybe"}}
+        {"field1": {"$empty": "cat"}}
         """;
     assertThrows(FqlParsingException.class, () -> fqlService.getFql(invalidEqualsConditionJson));
   }

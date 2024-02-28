@@ -53,12 +53,16 @@ public class DeserializerFunctions {
     IS_REGEX(node -> node.has($REGEX) && node.get($REGEX).isTextual()),
     IS_CONTAINS_ALL(node -> node.has($CONTAINS_ALL) && node.get($CONTAINS_ALL).isArray()),
     IS_NOT_CONTAINS_ALL(node -> node.has($NOT_CONTAINS_ALL) && node.get($NOT_CONTAINS_ALL).isArray()),
-    IS_EMPTY(node -> node.has($EMPTY) && node.get($EMPTY).isBoolean());
+    IS_EMPTY(node -> node.has($EMPTY) && isBooleanNode(node.get($EMPTY)));
 
     final Predicate<JsonNode> predicate;
 
     FieldPredicates(Predicate<JsonNode> predicate) {
       this.predicate = predicate;
+    }
+
+    private static boolean isBooleanNode(JsonNode node) {
+      return node.isBoolean() || "true".equals(node.textValue()) || "false".equals(node.textValue());
     }
   }
 
@@ -84,7 +88,13 @@ public class DeserializerFunctions {
     REGEX_DESERIALIZER((field, node) -> new RegexCondition(field, node.get($REGEX).textValue())),
     CONTAINS_ALL_DESERIALIZER((field, node) -> new ContainsAllCondition(field, getValues(node.get($CONTAINS_ALL).elements(), FieldDeserializers::convertValue))),
     NOT_CONTAINS_ALL_DESERIALIZER((field, node) -> new NotContainsAllCondition(field, getValues(node.get($NOT_CONTAINS_ALL).elements(), FieldDeserializers::convertValue))),
-    EMPTY_DESERIALIZER((field, node) -> new EmptyCondition(field, convertValue(node.get($EMPTY))));
+    EMPTY_DESERIALIZER((field, node) -> {
+      var value = convertValue(node.get($EMPTY));
+      if (value instanceof String valueString) {
+        return new EmptyCondition(field, Boolean.parseBoolean(valueString));
+      }
+      return new EmptyCondition(field, Boolean.TRUE.equals(value));
+    });
 
     final BiFunction<FqlField, JsonNode, FieldCondition<?>> deserializer;
 
