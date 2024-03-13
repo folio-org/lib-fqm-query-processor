@@ -1,4 +1,8 @@
 # lib-fqm-query-processor
+Copyright (C) 2023 The Open Library Foundation
+
+This software is distributed under the terms of the Apache License,
+Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 lib-fqm-query-processor is a java library for use by the FOLIO Query Machine. The library can be used to query the derived
 tables used for FQM.
@@ -243,4 +247,23 @@ The query processor library relies heavily on the concept of entity types. An en
  - user_patron_group_id (UUID): ID of the patron group that a user belongs to
  - user_patron_group (String): Name of the patron group that a user belongs to
 
+## Additional information
 
+### Issue tracker
+
+See project [LIBFQMQUER](https://folio-org.atlassian.net/browse/LIBFQMQUER)
+at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker).
+
+### Code of Conduct
+
+Refer to the Wiki
+[FOLIO Code of Conduct](https://folio-org.atlassian.net/wiki/x/V5B).
+
+### Code analysis
+
+[SonarQube analysis](https://sonarcloud.io/project/overview?id=org.folio%3Alib-fqm-query-processor)
+
+### Download and configuration
+
+The built artifacts for this module are available.
+See [configuration](https://dev.folio.org/download/artifacts) for repository access
