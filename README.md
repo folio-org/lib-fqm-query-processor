@@ -147,7 +147,7 @@ Example:
 ```
 
 ### $contains_all
-Matches all records where the field (an array) contains all the specified values. Supports array of string, number, uuid, and boolean types.
+Matches all records where an array field contains all of the specified values. Supports an array of string, number, uuid, or boolean types.
 
 Example:
 ```json
@@ -155,7 +155,7 @@ Example:
 ```
 
 ### $not_contains_all
-Matches all records where the field (an array) does not contain all the specified values. Supports array of string, number, uuid, and boolean types.
+Matches all records where an array field does not contain all of the specified values. Supports an array of string, number, uuid, or boolean types.
 
 Example:
 ```json
@@ -163,7 +163,7 @@ Example:
 ```
 
 ### $contains_any
-Matches all records where the field (an array) contains any of the specified values. Supports array of string, number, uuid, and boolean types.
+Matches all records where an array field contains any of the specified values. Supports an array of string, number, uuid, or boolean types.
 
 Example:
 ```json
@@ -171,7 +171,7 @@ Example:
 ```
 
 ### $not_contains_any
-Matches all records where the field (an array) does not contain any of the specified values. Supports array of string, number, uuid, and boolean types.
+Matches all records where an array field does not contain any of the specified values. Supports an array of string, number, uuid, or boolean types.
 
 Example:
 ```json
