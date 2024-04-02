@@ -1,5 +1,5 @@
 ## 2.0.1
-- [LIBFQMQUER-14](https://issues.folio.org/browse/LIBFQMQUER-14) Upgrade dependencies and clean up POMg
+- [LIBFQMQUER-14](https://issues.folio.org/browse/LIBFQMQUER-14) Upgrade dependencies and clean up POM
 
 ## 2.0.0
 - [LIBFQMQUER-11](https://issues.folio.org/browse/LIBFQMQUER-11): Add support for nested data structures
