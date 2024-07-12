@@ -27,7 +27,7 @@ class FqlDeserializerLessThanTest {
          {"field1": {"$lt": "value"}}
         """;
     FqlCondition<?> fqlCondition = new LessThanCondition(new FqlField("field1"), false, "value");
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0,fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -39,7 +39,7 @@ class FqlDeserializerLessThanTest {
          {"field1": {"$lte": "value"}}
         """;
     FqlCondition<?> fqlCondition = new LessThanCondition(new FqlField("field1"), true, "value");
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -69,7 +69,7 @@ class FqlDeserializerLessThanTest {
          {"field1": {"$lt": 10}}
         """;
     FqlCondition<?> fqlCondition = new LessThanCondition(new FqlField("field1"), false, 10);
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0,fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -81,7 +81,7 @@ class FqlDeserializerLessThanTest {
          {"field1": {"$lte": 10}}
         """;
     FqlCondition<?> fqlCondition = new LessThanCondition(new FqlField("field1"), true, 10);
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }

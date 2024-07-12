@@ -27,7 +27,7 @@ class FqlDeserializerGreaterThanTest {
          {"field1": {"$gt": "value"}}
         """;
     FqlCondition<?> fqlCondition = new GreaterThanCondition(new FqlField("field1"), false, "value");
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -39,7 +39,7 @@ class FqlDeserializerGreaterThanTest {
          {"field1": {"$gte": "value"}}
         """;
     FqlCondition<?> fqlCondition = new GreaterThanCondition(new FqlField("field1"), true, "value");
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -69,7 +69,7 @@ class FqlDeserializerGreaterThanTest {
          {"field1": {"$gt": 10}}
         """;
     FqlCondition<?> fqlCondition = new GreaterThanCondition(new FqlField("field1"), false, 10);
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0,fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -81,7 +81,7 @@ class FqlDeserializerGreaterThanTest {
          {"field1": {"$gte": 10}}
         """;
     FqlCondition<?> fqlCondition = new GreaterThanCondition(new FqlField("field1"), true, 10);
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
