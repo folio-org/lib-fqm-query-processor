@@ -27,7 +27,7 @@ class FqlDeserializerRegExTest {
          {"field1": {"$regex": ".*value.*"}}
         """;
     FqlCondition<?> fqlCondition = new RegexCondition(new FqlField("field1"), ".*value.*");
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }

@@ -27,7 +27,7 @@ class FqlDeserializerNotEqualsTest {
          {"field1": {"$ne": "value"}}
         """;
     FqlCondition<?> fqlCondition = new NotEqualsCondition(new FqlField("field1"), "value");
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -39,7 +39,7 @@ class FqlDeserializerNotEqualsTest {
         {"field1": {"$ne": true}}
         """;
     FqlCondition<?> fqlCondition = new NotEqualsCondition(new FqlField("field1"), true);
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleBooleanJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -51,7 +51,7 @@ class FqlDeserializerNotEqualsTest {
         {"field1": {"$ne": 11}}
         """;
     FqlCondition<?> fqlCondition = new NotEqualsCondition(new FqlField("field1"), 11);
-    Fql expectedFql = new Fql(fqlCondition);
+    Fql expectedFql = new Fql(0, fqlCondition);
     Fql actualFql = fqlService.getFql(simpleIntegerJson);
     assertEquals(expectedFql, actualFql);
   }
