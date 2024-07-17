@@ -57,7 +57,7 @@ class FqlDeserializerTest {
       new EqualsCondition(new FqlField("field6->nested"), "nested value")
     );
     AndCondition outerAndCondition = new AndCondition(outerFqlConditions);
-    Fql expectedFql = new Fql(0, outerAndCondition);
+    Fql expectedFql = new Fql("0", outerAndCondition);
     Fql actualFql = fqlService.getFql(complexFqlCriteria);
     assertEquals(expectedFql, actualFql);
   }

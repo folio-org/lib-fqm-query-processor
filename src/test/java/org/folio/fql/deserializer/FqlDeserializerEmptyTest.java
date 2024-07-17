@@ -31,25 +31,25 @@ class FqlDeserializerEmptyTest {
         "empty with boolean value",
         """
         {"field1": {"$empty": true}}""",
-        new Fql(0, new EmptyCondition(new FqlField("field1"), true))
+        new Fql("0", new EmptyCondition(new FqlField("field1"), true))
       ),
       Arguments.of(
         "not empty with boolean value",
         """
         {"field1": {"$empty": false}}""",
-        new Fql(0, new EmptyCondition(new FqlField("field1"), false))
+        new Fql("0", new EmptyCondition(new FqlField("field1"), false))
       ),
       Arguments.of(
         "empty with string value",
         """
         {"field1": {"$empty": "true"}}""",
-        new Fql(0, new EmptyCondition(new FqlField("field1"), true))
+        new Fql("0", new EmptyCondition(new FqlField("field1"), true))
       ),
       Arguments.of(
         "not empty with string value",
           """
           {"field1": {"$empty": "false"}}""",
-        new Fql(0, new EmptyCondition(new FqlField("field1"), false))
+        new Fql("0", new EmptyCondition(new FqlField("field1"), false))
       )
     );
   }

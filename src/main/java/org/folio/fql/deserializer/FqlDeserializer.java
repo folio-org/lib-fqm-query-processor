@@ -26,7 +26,7 @@ public class FqlDeserializer extends StdDeserializer<Fql> {
   public Fql deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
     JsonNode node = jsonParser.getCodec().readTree(jsonParser);
 
-    int version = node.has(VERSION_KEY) ? node.get(VERSION_KEY).asInt() : 0;
+    String version = node.has(VERSION_KEY) ? node.get(VERSION_KEY).asText() : "0";
     ((ObjectNode) node).remove(VERSION_KEY);
 
     FqlCondition<?> fqlCondition = mapper.convertValue(node, FqlCondition.class);

@@ -29,7 +29,7 @@ class FqlDeserializerContainsAllTest {
          {"arrayField1": {"$contains_all": ["value"]}}
         """;
     FqlCondition<?> fqlCondition = new ContainsAllCondition(new FqlField("arrayField1"), List.of("value"));
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleContainsJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -41,7 +41,7 @@ class FqlDeserializerContainsAllTest {
         {"arrayField1": {"$contains_all": [11]}}
         """;
     FqlCondition<?> fqlCondition = new ContainsAllCondition(new FqlField("arrayField1"), List.of(11));
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleContainsJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -53,7 +53,7 @@ class FqlDeserializerContainsAllTest {
          {"arrayField1": {"$contains_all": ["value1", "value2"]}}
         """;
     FqlCondition<?> fqlCondition = new ContainsAllCondition(new FqlField("arrayField1"), List.of("value1", "value2"));
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleContainsJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -65,7 +65,7 @@ class FqlDeserializerContainsAllTest {
         {"arrayField1": {"$contains_all": [11, 22, 19]}}
         """;
     FqlCondition<?> fqlCondition = new ContainsAllCondition(new FqlField("arrayField1"), List.of(11, 22, 19));
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleContainsJson);
     assertEquals(expectedFql, actualFql);
   }

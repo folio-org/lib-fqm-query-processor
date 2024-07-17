@@ -29,7 +29,7 @@ class FqlDeserializerNotInTest {
         {"field1": {"$nin": ["value1", 11, false ] }}
         """;
     FqlCondition<?> fqlCondition = new NotInCondition(new FqlField("field1"), List.of("value1", 11, false));
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleNotInConditionJson);
     assertEquals(expectedFql, actualFql);
   }
