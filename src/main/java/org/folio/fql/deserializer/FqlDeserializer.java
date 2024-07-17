@@ -24,13 +24,18 @@ public class FqlDeserializer extends StdDeserializer<Fql> {
 
   @Override
   public Fql deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-    JsonNode node = jsonParser.getCodec().readTree(jsonParser);
+    ObjectNode node = jsonParser.getCodec().readTree(jsonParser);
 
     String version = node.has(VERSION_KEY) ? node.get(VERSION_KEY).asText() : "0";
-    ((ObjectNode) node).remove(VERSION_KEY);
+    node.remove(VERSION_KEY);
 
-    FqlCondition<?> fqlCondition = mapper.convertValue(node, FqlCondition.class);
+    if (node.isEmpty()) {
+      // the query is just _version, no condition
+      return new Fql(version, null);
+    } else {
+      FqlCondition<?> fqlCondition = mapper.convertValue(node, FqlCondition.class);
 
-    return new Fql(version, fqlCondition);
+      return new Fql(version, fqlCondition);
+    }
   }
 }
