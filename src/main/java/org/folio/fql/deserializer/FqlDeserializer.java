@@ -2,13 +2,10 @@ package org.folio.fql.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.io.IOException;
-
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 
