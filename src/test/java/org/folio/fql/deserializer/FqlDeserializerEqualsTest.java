@@ -37,6 +37,20 @@ class FqlDeserializerEqualsTest {
   }
 
   @Test
+  void shouldGetSimpleFqlWithStringVersion() {
+    String simpleStringJson =
+      """
+         {
+          "_version":"123"
+         }
+        """;
+
+    Fql expectedFql = new Fql("123", null);
+    Fql actualFql = fqlService.getFql(simpleStringJson);
+    assertEquals(expectedFql, actualFql);
+  }
+
+  @Test
   void shouldGetSimpleFqlWithStringValue() {
     String simpleStringJson =
       """

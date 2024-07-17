@@ -2,13 +2,10 @@ package org.folio.fql.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.io.IOException;
-
 import org.folio.fql.model.Fql;
 import org.folio.fql.model.FqlCondition;
 
@@ -24,13 +21,18 @@ public class FqlDeserializer extends StdDeserializer<Fql> {
 
   @Override
   public Fql deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-    JsonNode node = jsonParser.getCodec().readTree(jsonParser);
+    ObjectNode node = jsonParser.getCodec().readTree(jsonParser);
 
     String version = node.has(VERSION_KEY) ? node.get(VERSION_KEY).asText() : "0";
-    ((ObjectNode) node).remove(VERSION_KEY);
+    node.remove(VERSION_KEY);
 
-    FqlCondition<?> fqlCondition = mapper.convertValue(node, FqlCondition.class);
+    if (node.isEmpty()) {
+      // the query is just _version, no condition
+      return new Fql(version, null);
+    } else {
+      FqlCondition<?> fqlCondition = mapper.convertValue(node, FqlCondition.class);
 
-    return new Fql(version, fqlCondition);
+      return new Fql(version, fqlCondition);
+    }
   }
 }
