@@ -20,7 +20,7 @@ class FqlServiceTest {
   @Test
   void shouldReturnFieldsForValidFqlFieldCondition() {
     EqualsCondition equalsCondition = new EqualsCondition(new FqlField("field1->nested"), "value1");
-    Fql fql = new Fql(0, equalsCondition);
+    Fql fql = new Fql("0", equalsCondition);
     List<String> expectedList = List.of("field1->nested");
     List<String> actualList = fqlService.getFqlFields(fql).stream().map(FqlField::serialize).toList();
     assertEquals(expectedList, actualList);
@@ -35,7 +35,7 @@ class FqlServiceTest {
         new GreaterThanCondition(new FqlField("field3"), false, 10)
       )
     );
-    Fql fql = new Fql(0, andCondition);
+    Fql fql = new Fql("0", andCondition);
     List<String> expectedList = List.of("field1", "field2", "field3");
     List<String> actualList = fqlService.getFqlFields(fql).stream().map(FqlField::serialize).toList();
     assertEquals(expectedList, actualList);

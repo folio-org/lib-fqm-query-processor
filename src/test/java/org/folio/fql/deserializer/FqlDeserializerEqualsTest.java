@@ -25,13 +25,13 @@ class FqlDeserializerEqualsTest {
     String simpleStringJson =
       """
          {
-          "_version":123,
+          "_version":"123",
           "field1": {"$eq": "value"}
          }
         """;
 
     FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), "value");
-    Fql expectedFql = new Fql(123, fqlCondition);
+    Fql expectedFql = new Fql("123", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -44,7 +44,7 @@ class FqlDeserializerEqualsTest {
         """;
 
     FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), "value");
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleStringJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -56,7 +56,7 @@ class FqlDeserializerEqualsTest {
         {"field1": {"$eq": true}}
         """;
     FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), true);
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleBooleanJson);
     assertEquals(expectedFql, actualFql);
   }
@@ -68,7 +68,7 @@ class FqlDeserializerEqualsTest {
         {"field1": {"$eq": 11}}
         """;
     FqlCondition<?> fqlCondition = new EqualsCondition(new FqlField("field1"), 11);
-    Fql expectedFql = new Fql(0, fqlCondition);
+    Fql expectedFql = new Fql("0", fqlCondition);
     Fql actualFql = fqlService.getFql(simpleIntegerJson);
     assertEquals(expectedFql, actualFql);
   }
