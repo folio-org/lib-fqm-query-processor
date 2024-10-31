@@ -1,3 +1,8 @@
+## 3.0.0
+- Use Ramsons version of folio-query-tool-metadata
+- Upgrade dependencies [LIBFQMQUER-14](https://folio-org.atlassian.net/browse/LIBFQMQUER-14)
+- Add support for query versioning [MODFQMMGR-388](https://folio-org.atlassian.net/browse/MODFQMMGR-388)
+
 ## 2.0.0
 - [LIBFQMQUER-11](https://issues.folio.org/browse/LIBFQMQUER-11): Add support for nested data structures
 - [LIBFQMQUER-12](https://issues.folio.org/browse/LIBFQMQUER-12): Resolve fields with idColumnName to the original column
