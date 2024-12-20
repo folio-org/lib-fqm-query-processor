@@ -1,3 +1,6 @@
+## 3.0.1
+- Bump to folio-query-tool-metadata v3.0.2, which adds the jsonbArrayType field type ([MODFQMMGR-548](https://folio-org.atlassian.net/browse/MODFQMMGR-548))
+
 ## 3.0.0
 - Use Ramsons version of folio-query-tool-metadata
 - Upgrade dependencies [LIBFQMQUER-14](https://folio-org.atlassian.net/browse/LIBFQMQUER-14)
