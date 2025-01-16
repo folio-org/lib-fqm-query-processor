@@ -2,7 +2,6 @@ package org.folio.fql.deserializer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.ContainsAllCondition;
 import org.folio.fql.model.ContainsAnyCondition;
@@ -19,6 +18,8 @@ import org.folio.fql.model.NotContainsAnyCondition;
 import org.folio.fql.model.NotEqualsCondition;
 import org.folio.fql.model.NotInCondition;
 import org.folio.fql.model.RegexCondition;
+import org.folio.fql.model.StartsWithCondition;
+import org.folio.fql.model.ContainsCondition;
 import org.folio.fql.model.field.FqlField;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.function.Predicate;
 
 import static org.folio.fql.model.ContainsAllCondition.$CONTAINS_ALL;
 import static org.folio.fql.model.ContainsAnyCondition.$CONTAINS_ANY;
+import static org.folio.fql.model.ContainsCondition.$CONTAINS;
 import static org.folio.fql.model.NotContainsAllCondition.$NOT_CONTAINS_ALL;
 import static org.folio.fql.model.EmptyCondition.$EMPTY;
 import static org.folio.fql.model.EqualsCondition.$EQ;
@@ -43,6 +45,7 @@ import static org.folio.fql.model.InCondition.$IN;
 import static org.folio.fql.model.NotInCondition.$NIN;
 import static org.folio.fql.model.RegexCondition.$REGEX;
 import static org.folio.fql.model.AndCondition.$AND;
+import static org.folio.fql.model.StartsWithCondition.$STARTS_WITH;
 
 public class DeserializerFunctions {
   enum FieldPredicates {
@@ -59,6 +62,8 @@ public class DeserializerFunctions {
     IS_NOT_CONTAINS_ALL(node -> node.has($NOT_CONTAINS_ALL) && node.get($NOT_CONTAINS_ALL).isArray()),
     IS_CONTAINS_ANY(node -> node.has($CONTAINS_ANY) && node.get($CONTAINS_ANY).isArray()),
     IS_NOT_CONTAINS_ANY(node -> node.has($NOT_CONTAINS_ANY) && node.get($NOT_CONTAINS_ANY).isArray()),
+    IS_STARTS_WITH(node -> node.has($STARTS_WITH) && node.get($STARTS_WITH).isTextual()),
+    IS_CONTAINS(node -> node.has($CONTAINS) && node.get($CONTAINS).isTextual()),
     IS_EMPTY(node -> node.has($EMPTY) && isBooleanNode(node.get($EMPTY)));
 
     final Predicate<JsonNode> predicate;
@@ -96,6 +101,8 @@ public class DeserializerFunctions {
     NOT_CONTAINS_ALL_DESERIALIZER((field, node) -> new NotContainsAllCondition(field, getValues(node.get($NOT_CONTAINS_ALL).elements(), FieldDeserializers::convertValue))),
     CONTAINS_ANY_DESERIALIZER((field, node) -> new ContainsAnyCondition(field, getValues(node.get($CONTAINS_ANY).elements(), FieldDeserializers::convertValue))),
     NOT_CONTAINS_ANY_DESERIALIZER((field, node) -> new NotContainsAnyCondition(field, getValues(node.get($NOT_CONTAINS_ANY).elements(), FieldDeserializers::convertValue))),
+    STARTS_WITH_DESERIALIZER((field, node) -> new StartsWithCondition(field, node.get($STARTS_WITH).textValue())),
+    CONTAINS_DESERIALIZER((field, node) -> new ContainsCondition(field, node.get($CONTAINS).textValue())),
     EMPTY_DESERIALIZER((field, node) -> {
       var value = convertValue(node.get($EMPTY));
       if (value instanceof String valueString) {
