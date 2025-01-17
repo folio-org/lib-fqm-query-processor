@@ -16,6 +16,8 @@ public sealed interface FieldCondition<T>
     NotContainsAllCondition,
     ContainsAnyCondition,
     NotContainsAnyCondition,
+    StartsWithCondition,
+    ContainsCondition,
     EmptyCondition {
   FqlField field();
 }
