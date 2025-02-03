@@ -140,6 +140,10 @@
       <name>FOLIO Maven repository</name>
       <url>https://repository.folio.org/repository/maven-folio</url>
     </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://www.jitpack.io</url>
+    </repository>
   </repositories>
 
   <distributionManagement>
@@ -161,9 +165,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.folio</groupId>
-      <artifactId>folio-query-tool-metadata</artifactId>
-      <version>${folio-query-tool-metadata.version}</version>
+	    <groupId>com.github.folio-org</groupId>
+	    <artifactId>folio-query-tool-metadata</artifactId>
+	    <version>fqtm-11-jitpack-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
