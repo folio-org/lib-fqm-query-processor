@@ -1,3 +1,6 @@
+## 4.0.1
+- Update FQTM dependency to latest version
+
 ## 4.0.0
 - [MODFQMMGR-613](https://folio-org.atlassian.net/browse/MODFQMMGR-613): Implement optimized Contains and StartsWith operators
 - [FOLIO-4238](https://folio-org.atlassian.net/browse/FOLIO-4238): Update Java to 21
