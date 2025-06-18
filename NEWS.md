@@ -1,3 +1,6 @@
+## 4.0.2
+- Update FQTM dependency to latest version
+
 ## 4.0.1
 - Update FQTM dependency to latest version
 
