@@ -9,6 +9,9 @@
 - [FOLIO-4238](https://folio-org.atlassian.net/browse/FOLIO-4238): Update Java to 21
 - Upgrade to folio-query-tool-metadata 3.1.0
 
+## 3.0.2
+- Bump folio-query-tool-metadata to v3.0.3
+
 ## 3.0.1
 - Bump to folio-query-tool-metadata v3.0.2, which adds the jsonbArrayType field type ([MODFQMMGR-548](https://folio-org.atlassian.net/browse/MODFQMMGR-548))
 
