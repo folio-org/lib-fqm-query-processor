@@ -12,10 +12,6 @@ public sealed interface FieldCondition<T>
     NotEqualsCondition,
     NotInCondition,
     RegexCondition,
-    ContainsAllCondition,
-    NotContainsAllCondition,
-    ContainsAnyCondition,
-    NotContainsAnyCondition,
     StartsWithCondition,
     ContainsCondition,
     EmptyCondition {
