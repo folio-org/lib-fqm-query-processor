@@ -20,6 +20,7 @@ import org.folio.querytool.domain.dto.EntityDataType;
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
 import org.folio.querytool.domain.dto.Field;
+import org.folio.querytool.domain.dto.JsonbArrayType;
 import org.folio.querytool.domain.dto.NestedObjectProperty;
 import org.folio.querytool.domain.dto.ObjectType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,10 +85,12 @@ public class FqlValidationService {
     while (!subFields.isEmpty()) {
       SubField subField = subFields.pop();
       if (subField instanceof ArraySubField) {
+        // For array types, we can assume that an array subfield will be followed by a property (enforced in FqlField
+        // parser) therefore, we don't need to worry about curField not being set here
         if (curDataType instanceof ArrayType arrayDataType) {
-          // we can assume that an array subfield will be followed by a property (enforced in FqlField parser)
-          // therefore, we don't need to worry about curField not being set here
           curDataType = arrayDataType.getItemDataType();
+        } else if (curDataType instanceof JsonbArrayType jsonbArrayDataType) {
+          curDataType = jsonbArrayDataType.getItemDataType();
         } else {
           return Optional.empty();
         }

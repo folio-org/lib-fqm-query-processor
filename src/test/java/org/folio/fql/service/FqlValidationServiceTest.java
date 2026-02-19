@@ -10,6 +10,7 @@ import org.folio.fql.model.field.FqlField;
 import org.folio.querytool.domain.dto.ArrayType;
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
+import org.folio.querytool.domain.dto.JsonbArrayType;
 import org.folio.querytool.domain.dto.NestedObjectProperty;
 import org.folio.querytool.domain.dto.ObjectType;
 import org.folio.querytool.domain.dto.StringType;
@@ -55,6 +56,19 @@ class FqlValidationServiceTest {
         new EntityTypeColumn().name("arrayArrayObjectField").dataType(
           new ArrayType().itemDataType(
             new ArrayType().itemDataType(
+              new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1"))
+            )
+          )
+        ),
+        new EntityTypeColumn().name("jsonbArrayField").dataType(new JsonbArrayType().itemDataType(new StringType())),
+        new EntityTypeColumn().name("jsonbArrayObjectField").dataType(
+          new JsonbArrayType().itemDataType(
+            new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1"))
+          )
+        ),
+        new EntityTypeColumn().name("jsonbArrayJsonbArrayObjectField").dataType(
+          new JsonbArrayType().itemDataType(
+            new JsonbArrayType().itemDataType(
               new ObjectType().addPropertiesItem(new NestedObjectProperty().name("property1"))
             )
           )
@@ -200,7 +214,24 @@ class FqlValidationServiceTest {
       Arguments.of("arrayArrayObjectField[*][*]", false), // disallowed to have [*] with no property
       Arguments.of("arrayArrayObjectField[*][*]->property1", true),
       Arguments.of("arrayArrayObjectField[*][*]->property1->foo", false),
-      Arguments.of("arrayArrayObjectField[*][*]->property2", false)
+      Arguments.of("arrayArrayObjectField[*][*]->property2", false),
+      Arguments.of("jsonbArrayField", true),
+      Arguments.of("jsonbArrayField->foo", false),
+      Arguments.of("jsonbArrayField[*]", false), // disallowed to have [*] with no property
+      Arguments.of("jsonbArrayField[*]->foo", false),
+      Arguments.of("jsonbArrayObjectField", true),
+      Arguments.of("jsonbArrayObjectField->property1", false),
+      Arguments.of("jsonbArrayObjectField[*]", false), // disallowed to have [*] with no property
+      Arguments.of("jsonbArrayObjectField[*]->property1", true),
+      Arguments.of("jsonbArrayObjectField[*]->property1->foo", false),
+      Arguments.of("jsonbArrayObjectField[*]->property2", false),
+      Arguments.of("jsonbArrayJsonbArrayObjectField", true),
+      Arguments.of("jsonbArrayJsonbArrayObjectField->property1", false),
+      Arguments.of("jsonbArrayJsonbArrayObjectField[*]", false), // disallowed to have [*] with no property
+      Arguments.of("jsonbArrayJsonbArrayObjectField[*][*]", false), // disallowed to have [*] with no property
+      Arguments.of("jsonbArrayJsonbArrayObjectField[*][*]->property1", true),
+      Arguments.of("jsonbArrayJsonbArrayObjectField[*][*]->property1->foo", false),
+      Arguments.of("jsonbArrayJsonbArrayObjectField[*][*]->property2", false)
     );
   }
 
