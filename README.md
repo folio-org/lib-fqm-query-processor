@@ -267,7 +267,6 @@ This can be done using the library's `processQuery` method. The method accepts t
   - entityTypeId (UUID): The UUID of the entity type for the query
   - fqlQuery (String): The FQL query string
   - fields (List of Strings): List of fields from the entity type to return in the query results
-  - afterId (UUID): ID corresponding to the element after which results should start being retrieved. Functions as an offset (e.g., if the ID of the 100th element is provided, then results will will be retrieved starting from the 101st element). If this parameter is null, it indicates an offset of 0.
   - limit (int): number of results to retrieve
 
 ## More information on entity types
