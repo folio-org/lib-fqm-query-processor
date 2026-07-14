@@ -1,5 +1,5 @@
 ## 4.2.0
-- [MODFQMMGR-XXXX](https://folio-org.atlassian.net/browse/MODFQMMGR-XXXX): Recognize dynamic MARC fields (`marc_*`) during FQL validation. Adds canonical MARC field-name parsing and metadata-only synthetic column generation (`MarcFieldFactory`, `MarcFieldName`), gated on the entity type declaring the generic `marc` placeholder column.
+- [LIBFQMQUER-20](https://folio-org.atlassian.net/browse/LIBFQMQUER-20): Support MARC field parsing and MARC-aware validation
 
 ## 4.1.0
 - [MODFQMMGR-889](https://folio-org.atlassian.net/browse/MODFQMMGR-889): Remove unsupported `contains` operators for predefined repeatable fields
