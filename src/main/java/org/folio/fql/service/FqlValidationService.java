@@ -75,6 +75,12 @@ public class FqlValidationService {
       .orElse(null);
 
     if (column == null) {
+      // Dynamic MARC fields (e.g. marc_245_a) are not declared columns. They are valid only when the name
+      // parses as a MARC field and the entity type declares the generic marc placeholder. MARC references are
+      // flat names with no FQL subfields, so only attempt this when there are none.
+      if (search.getSubFields().isEmpty()) {
+        return MarcFieldFactory.resolveMarcField(search.getColumnName(), entityType);
+      }
       return Optional.empty();
     }
 
