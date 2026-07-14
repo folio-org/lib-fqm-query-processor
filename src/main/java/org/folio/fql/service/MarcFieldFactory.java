@@ -48,8 +48,8 @@ public class MarcFieldFactory {
   private static final Pattern CONSTRAINED_SUBFIELD_PATTERN = Pattern.compile(
     "^marc_(?<tag>\\d{3})_ind(?<indicator>[12])_(?<indValue>blank|[a-z0-9])_(?<subfield>[a-z0-9])$",
     Pattern.CASE_INSENSITIVE);
-  // Generic scanner for "fieldName": keys in a raw FQL query. It intentionally does NOT encode the MARC grammar;
-  // every candidate key is validated through parse()/isMarcFieldName so the grammar lives in exactly one place.
+  // Generic scanner for JSON field-name keys in a raw FQL query. It intentionally does NOT encode the MARC
+  // grammar. Every candidate key is validated through parse()/isMarcFieldName, so the grammar lives in one place.
   private static final Pattern QUERY_FIELD_KEY_PATTERN = Pattern.compile("\"(?<field>\\w+)\"\\s*:");
 
   public static boolean isMarcFieldName(String fieldName) {

@@ -82,7 +82,7 @@ class FqlValidationServiceTest {
   private FqlValidationService fqlValidationService;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     this.fqlValidationService = new FqlValidationService(new FqlService());
   }
 
