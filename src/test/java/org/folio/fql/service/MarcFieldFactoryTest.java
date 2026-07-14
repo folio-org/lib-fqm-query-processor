@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.folio.fql.model.field.MarcFieldName;
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
@@ -117,6 +118,12 @@ class MarcFieldFactoryTest {
   }
 
   @Test
+  void findMarcPlaceholderReturnsEmptyForNullEntityTypeOrColumns() {
+    assertTrue(MarcFieldFactory.findMarcPlaceholder(null).isEmpty());
+    assertTrue(MarcFieldFactory.findMarcPlaceholder(new EntityType().columns(null)).isEmpty());
+  }
+
+  @Test
   void isGenericMarcPlaceholderRequiresNameAndMarcType() {
     assertTrue(MarcFieldFactory.isGenericMarcPlaceholder(
       new EntityTypeColumn().name("marc").dataType(new MarcType().dataType("marcType"))));
@@ -162,6 +169,31 @@ class MarcFieldFactoryTest {
   void getReferencedMarcFieldNamesHandlesBlankInput() {
     assertTrue(MarcFieldFactory.getReferencedMarcFieldNames(null).isEmpty());
     assertTrue(MarcFieldFactory.getReferencedMarcFieldNames("   ").isEmpty());
+  }
+
+  @Test
+  void getReferencedFieldNamesReturnsSingleFieldCondition() {
+    FqlService fqlService = new FqlService();
+    var condition = fqlService.getFql("{ \"marc_245_a\": { \"$eq\": \"x\" } }").fqlCondition();
+    assertEquals(Set.of("marc_245_a"), MarcFieldFactory.getReferencedFieldNames(condition));
+  }
+
+  @Test
+  void getReferencedFieldNamesRecursesIntoAndCondition() {
+    FqlService fqlService = new FqlService();
+    // Collects every referenced field, MARC or not, across the nested $and tree.
+    String andQuery = """
+      {
+        "$and": [
+          { "marc_245_a": { "$eq": "x" } },
+          { "field1": { "$eq": "y" } },
+          { "$and": [ { "marc_008": { "$empty": false } } ] }
+        ]
+      }
+      """;
+    var condition = fqlService.getFql(andQuery).fqlCondition();
+    assertEquals(Set.of("marc_245_a", "field1", "marc_008"),
+      MarcFieldFactory.getReferencedFieldNames(condition));
   }
 
   private static String emptyToNull(String value) {
