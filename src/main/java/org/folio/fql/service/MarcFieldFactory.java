@@ -37,7 +37,7 @@ public class MarcFieldFactory {
   private static final Pattern TAG_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})$", Pattern.CASE_INSENSITIVE);
 
-  // Subfield form (e.g. marc_245_a). Data-field tags (010+) only; control fields have no indicators.
+  // Subfield form (e.g. marc_245_a). Data-field tags (010+) only; control fields have no subfields.
   private static final Pattern SUBFIELD_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})_(?<subfield>[a-z0-9])$", Pattern.CASE_INSENSITIVE);
 
