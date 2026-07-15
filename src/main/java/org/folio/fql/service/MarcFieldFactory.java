@@ -32,22 +32,27 @@ public class MarcFieldFactory {
    */
   public static final String GENERIC_MARC_COLUMN_NAME = "marc";
 
-  // Field names are accepted case-insensitively (e.g. MARC_245_A behaves the same as marc_245_a). The tag/
-  // subfield are normalized to their canonical storage form when the MarcFieldName is built.
-  private static final Pattern SUBFIELD_PATTERN =
-    Pattern.compile("^marc_(?<tag>\\d{3})_(?<subfield>[a-z0-9])$", Pattern.CASE_INSENSITIVE);
-  // Tag-only form (e.g. marc_245). Matches any subfield of the tag.
+  // Tag-only form (e.g. marc_245). Matches any subfield of the tag, and is the only valid form for control
+  // fields. All patterns match case-insensitively (MARC_245 behaves the same as marc_245).
   private static final Pattern TAG_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})$", Pattern.CASE_INSENSITIVE);
+
+  // Subfield form (e.g. marc_245_a). The subfield code is normalized to its lower-case storage form when the
+  // MarcFieldName is built.
+  private static final Pattern SUBFIELD_PATTERN =
+    Pattern.compile("^marc_(?<tag>\\d{3})_(?<subfield>[a-z0-9])$", Pattern.CASE_INSENSITIVE);
+
   // Indicator form (e.g. marc_245_ind1 / marc_245_ind2). Data-field tags (010+) only; control fields have no
   // indicators.
   private static final Pattern INDICATOR_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})_ind(?<indicator>[12])$", Pattern.CASE_INSENSITIVE);
+
   // Constrained-subfield form (e.g. marc_245_ind1_7_a, marc_245_ind1_blank_a). A subfield value target with the
   // indicator fixed to a constant matched on the same row. Data-field tags (010+) only.
   private static final Pattern CONSTRAINED_SUBFIELD_PATTERN = Pattern.compile(
     "^marc_(?<tag>\\d{3})_ind(?<indicator>[12])_(?<indValue>blank|[a-z0-9])_(?<subfield>[a-z0-9])$",
     Pattern.CASE_INSENSITIVE);
+
   // Generic scanner for JSON field-name keys in a raw FQL query. It intentionally does NOT encode the MARC
   // grammar. Every candidate key is validated through parse()/isMarcFieldName, so the grammar lives in one place.
   private static final Pattern QUERY_FIELD_KEY_PATTERN = Pattern.compile("\"(?<field>\\w+)\"\\s*:");
