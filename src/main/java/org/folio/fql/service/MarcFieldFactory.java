@@ -21,7 +21,7 @@ import org.folio.querytool.domain.dto.MarcType;
  *
  * <p>This class is deliberately free of SQL/storage concerns: it parses field names, detects the generic
  * {@code marc} capability placeholder, and produces metadata-only {@link EntityTypeColumn}s. The module that
- * executes queries (mod-fqm-manager) is responsible for generating SQL from the parsed {@link MarcFieldName}.</p>
+ * executes queries (mod-fqm-manager) is responsible for generating SQL from the parsed {@link MarcFieldName}.
  */
 @UtilityClass
 public class MarcFieldFactory {
@@ -37,8 +37,7 @@ public class MarcFieldFactory {
   private static final Pattern TAG_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})$", Pattern.CASE_INSENSITIVE);
 
-  // Subfield form (e.g. marc_245_a). The subfield code is normalized to its lower-case storage form when the
-  // MarcFieldName is built.
+  // Subfield form (e.g. marc_245_a). Data-field tags (010+) only; control fields have no indicators.
   private static final Pattern SUBFIELD_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})_(?<subfield>[a-z0-9])$", Pattern.CASE_INSENSITIVE);
 
