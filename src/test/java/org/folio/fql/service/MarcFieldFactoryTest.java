@@ -165,8 +165,9 @@ class MarcFieldFactoryTest {
   }
 
   @Test
-  void getReferencedMarcFieldNamesHandlesBlankInput() {
-    assertTrue(MarcFieldFactory.getReferencedMarcFieldNames(null).isEmpty());
+  void getReferencedMarcFieldNamesFromRawQueryHandlesBlankInput() {
+    // Cast disambiguates the String overload from the FqlCondition one.
+    assertTrue(MarcFieldFactory.getReferencedMarcFieldNames((String) null).isEmpty());
     assertTrue(MarcFieldFactory.getReferencedMarcFieldNames("   ").isEmpty());
   }
 
