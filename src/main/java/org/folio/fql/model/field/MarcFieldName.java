@@ -6,7 +6,7 @@ package org.folio.fql.model.field;
  * representation shared across modules; it carries no SQL or storage concerns (those live in the module that
  * generates SQL from it).
  *
- * <p>Supported forms:</p>
+ * <p>Supported forms:
  * <ul>
  *   <li>tag-only: {@code subfield}, {@code indicatorNumber}, {@code indicatorValue} all null</li>
  *   <li>subfield: {@code subfield} set</li>
