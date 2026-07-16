@@ -1,6 +1,9 @@
 package org.folio.fql.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -168,6 +171,37 @@ public class MarcFieldFactory {
       .queryable(true)
       .visibleByDefault(false)
       .essential(false);
+  }
+
+  /**
+   * Return {@code entityType} augmented with metadata-only synthetic columns for the MARC field names in
+   * {@code fieldNames}. Only names that parse as MARC fields are added, and only when the entity type declares
+   * the generic {@code marc} placeholder; other names and already-present columns are skipped. The original
+   * entity type is not mutated. The synthesized columns carry no SQL — see {@link #toColumn(MarcFieldName)}.
+   */
+  public static EntityType addSyntheticColumns(EntityType entityType, Collection<String> fieldNames) {
+    if (fieldNames == null || fieldNames.isEmpty()
+      || entityType == null || entityType.getColumns() == null
+      || findMarcPlaceholder(entityType).isEmpty()) {
+      return entityType;
+    }
+
+    List<EntityTypeColumn> updatedColumns = new ArrayList<>(entityType.getColumns());
+    Set<String> existingFieldNames = updatedColumns.stream()
+      .map(Field::getName)
+      .collect(LinkedHashSet::new, Set::add, Set::addAll);
+
+    for (String fieldName : fieldNames) {
+      if (fieldName == null || existingFieldNames.contains(fieldName)) {
+        continue;
+      }
+      parse(fieldName).map(MarcFieldFactory::toColumn).ifPresent(column -> {
+        updatedColumns.add(column);
+        existingFieldNames.add(fieldName);
+      });
+    }
+
+    return entityType.toBuilder().columns(updatedColumns).build();
   }
 
   /**
