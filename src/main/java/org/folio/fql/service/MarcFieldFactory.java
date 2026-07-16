@@ -126,14 +126,15 @@ public class MarcFieldFactory {
     return fieldNames;
   }
 
-  /** All field names referenced by a parsed FQL condition tree (MARC or otherwise). */
-  public static Set<String> getReferencedFieldNames(FqlCondition<?> condition) {
+  /** MARC field names referenced anywhere in a parsed FQL condition tree. */
+  public static Set<String> getReferencedMarcFieldNames(FqlCondition<?> condition) {
     if (condition instanceof FieldCondition<?> fieldCondition) {
-      return Set.of(fieldCondition.field().getColumnName());
+      String fieldName = fieldCondition.field().getColumnName();
+      return isMarcFieldName(fieldName) ? Set.of(fieldName) : Set.of();
     }
     if (condition instanceof AndCondition andCondition) {
       return andCondition.value().stream()
-        .map(MarcFieldFactory::getReferencedFieldNames)
+        .map(MarcFieldFactory::getReferencedMarcFieldNames)
         .collect(LinkedHashSet::new, Set::addAll, Set::addAll);
     }
     return Set.of();
@@ -148,11 +149,7 @@ public class MarcFieldFactory {
       .findFirst();
   }
 
-  /**
-   * The generic, hidden {@code marc} capability column that declares an entity type supports dynamic MARC field
-   * references. It is a correlation placeholder, not a user-facing field, and should be excluded from field
-   * listings.
-   */
+  /** Whether the column is the generic {@code marc} capability placeholder (see {@link #GENERIC_MARC_COLUMN_NAME}). */
   public static boolean isGenericMarcPlaceholder(EntityTypeColumn column) {
     return column != null
       && GENERIC_MARC_COLUMN_NAME.equals(column.getName())

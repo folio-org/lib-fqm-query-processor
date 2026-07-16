@@ -171,16 +171,16 @@ class MarcFieldFactoryTest {
   }
 
   @Test
-  void getReferencedFieldNamesReturnsSingleFieldCondition() {
+  void getReferencedMarcFieldNamesFromConditionReturnsSingleField() {
     FqlService fqlService = new FqlService();
     var condition = fqlService.getFql("{ \"marc_245_a\": { \"$eq\": \"x\" } }").fqlCondition();
-    assertEquals(Set.of("marc_245_a"), MarcFieldFactory.getReferencedFieldNames(condition));
+    assertEquals(Set.of("marc_245_a"), MarcFieldFactory.getReferencedMarcFieldNames(condition));
   }
 
   @Test
-  void getReferencedFieldNamesRecursesIntoAndCondition() {
+  void getReferencedMarcFieldNamesFromConditionFiltersNonMarcAndRecurses() {
     FqlService fqlService = new FqlService();
-    // Collects every referenced field, MARC or not, across the nested $and tree.
+    // Only MARC fields are collected; the non-MARC field1 is excluded, and the nested $and is traversed.
     String andQuery = """
       {
         "$and": [
@@ -191,8 +191,8 @@ class MarcFieldFactoryTest {
       }
       """;
     var condition = fqlService.getFql(andQuery).fqlCondition();
-    assertEquals(Set.of("marc_245_a", "field1", "marc_008"),
-      MarcFieldFactory.getReferencedFieldNames(condition));
+    assertEquals(Set.of("marc_245_a", "marc_008"),
+      MarcFieldFactory.getReferencedMarcFieldNames(condition));
   }
 
   private static String emptyToNull(String value) {
