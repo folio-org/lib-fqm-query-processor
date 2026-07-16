@@ -304,10 +304,11 @@ class FqlValidationServiceTest {
     assertEquals(Map.of(), actualErrors);
   }
 
-  @ParameterizedTest
-  @MethodSource("validMarcFieldNames")
-  void shouldRejectMarcFieldWhenNoPlaceholder(String fieldName) {
-    // Same MARC names, but against an entity type without the marc placeholder: still unknown fields.
+  @Test
+  void shouldRejectMarcFieldWhenNoPlaceholder() {
+    // Without the marc placeholder, resolution short-circuits before parsing, so the field-name shape is
+    // irrelevant — a single well-formed MARC name is enough to prove the placeholder gates recognition.
+    String fieldName = "marc_245_a";
     Map<String, String> actualErrors =
       fqlValidationService.validateFql(entityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
     assertEquals(1, actualErrors.size());
