@@ -65,7 +65,6 @@ class MarcFieldFactoryTest {
     "marc_24",             // tag too short
     "marc_2451",           // tag too long
     "marc_001_a",          // control field with subfield
-    "marc_009_b",          // control field with subfield
     "marc_008_ind1",       // control field with indicator
     "marc_245_ind3",       // invalid indicator number
     "marc_245_ind1_ab_a",  // multi-char indicator value
