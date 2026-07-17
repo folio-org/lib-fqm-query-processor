@@ -3,8 +3,10 @@ package org.folio.fql.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -108,6 +110,41 @@ class MarcFieldFactoryTest {
     // Metadata only: no SQL value getters are produced by the lib.
     assertNull(column.getValueGetter());
     assertNull(column.getFilterValueGetter());
+  }
+
+  @Test
+  void addSyntheticColumnsAppendsMarcColumnsAndSkipsOthers() {
+    EntityType original = marcEntityType(); // columns: field1, marc (placeholder)
+    EntityType result = MarcFieldFactory.addSyntheticColumns(
+      original, Arrays.asList("marc", null, "field1", "not_a_marc_field", "marc_245_a"));
+
+    // Only marc_245_a is appended: "marc"/"field1" already present, null skipped, non-MARC name skipped.
+    assertEquals(List.of("field1", "marc", "marc_245_a"),
+      result.getColumns().stream().map(EntityTypeColumn::getName).toList());
+
+    // The appended column is the lib's metadata-only MARC column.
+    EntityTypeColumn added = result.getColumns().stream()
+      .filter(c -> "marc_245_a".equals(c.getName())).findFirst().orElseThrow();
+    assertTrue(added.getDataType() instanceof MarcType);
+    assertEquals("MARC 245$a", added.getLabelAlias());
+
+    // The original entity type is not mutated.
+    assertEquals(List.of("field1", "marc"),
+      original.getColumns().stream().map(EntityTypeColumn::getName).toList());
+  }
+
+  @Test
+  void addSyntheticColumnsReturnsSameInstanceWithoutPlaceholder() {
+    // No marc placeholder -> the entity type doesn't support MARC, so it's returned unchanged (same instance).
+    EntityType original = nonMarcEntityType();
+    assertSame(original, MarcFieldFactory.addSyntheticColumns(original, List.of("marc_245_a")));
+  }
+
+  @Test
+  void addSyntheticColumnsReturnsSameInstanceForNullOrEmptyFieldNames() {
+    EntityType original = marcEntityType();
+    assertSame(original, MarcFieldFactory.addSyntheticColumns(original, null));
+    assertSame(original, MarcFieldFactory.addSyntheticColumns(original, List.of()));
   }
 
   @Test
