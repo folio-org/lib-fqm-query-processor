@@ -11,6 +11,7 @@ import org.folio.querytool.domain.dto.ArrayType;
 import org.folio.querytool.domain.dto.EntityType;
 import org.folio.querytool.domain.dto.EntityTypeColumn;
 import org.folio.querytool.domain.dto.JsonbArrayType;
+import org.folio.querytool.domain.dto.MarcType;
 import org.folio.querytool.domain.dto.NestedObjectProperty;
 import org.folio.querytool.domain.dto.ObjectType;
 import org.folio.querytool.domain.dto.StringType;
@@ -81,7 +82,7 @@ class FqlValidationServiceTest {
   private FqlValidationService fqlValidationService;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     this.fqlValidationService = new FqlValidationService(new FqlService());
   }
 
@@ -270,5 +271,66 @@ class FqlValidationServiceTest {
   @MethodSource("idColumnResolutionNonexistentParameters")
   void testIdColumnResolutionNonexistent(String search) {
     assertTrue(FqlValidationService.findFieldDefinitionForQuerying(new FqlField(search), entityType).isEmpty());
+  }
+
+  // Entity type that supports dynamic MARC fields, signalled by the hidden generic "marc" placeholder.
+  private static final EntityType marcEntityType = new EntityType()
+    .name("marc_entity_type")
+    .columns(
+      List.of(
+        new EntityTypeColumn().name("field1").dataType(new StringType()),
+        new EntityTypeColumn().name("marc").dataType(new MarcType().dataType("marcType"))
+      )
+    );
+
+  static List<String> validMarcFieldNames() {
+    return List.of(
+      "marc_245",              // tag-only (data field)
+      "marc_008",              // tag-only (control field)
+      "marc_245_a",            // subfield
+      "marc_245_ind1",         // indicator-only
+      "marc_245_ind2",         // indicator-only
+      "marc_245_ind1_7_a",     // constrained subfield (alphanumeric indicator)
+      "marc_245_ind1_blank_a", // constrained subfield (blank indicator)
+      "MARC_245_A"             // case-insensitive
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("validMarcFieldNames")
+  void shouldValidateMarcFieldWhenPlaceholderPresent(String fieldName) {
+    Map<String, String> actualErrors =
+      fqlValidationService.validateFql(marcEntityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
+    assertEquals(Map.of(), actualErrors);
+  }
+
+  @Test
+  void shouldRejectMarcFieldWhenNoPlaceholder() {
+    String fieldName = "marc_245_a";
+    Map<String, String> actualErrors =
+      fqlValidationService.validateFql(entityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
+    assertEquals(1, actualErrors.size());
+    assertTrue(actualErrors.containsKey(fieldName));
+  }
+
+  static List<String> malformedMarcFieldNames() {
+    return List.of(
+      "marc_24",               // tag too short
+      "marc_2451",             // tag too long
+      "marc_001_a",            // control field with subfield
+      "marc_008_ind1",         // control field with indicator
+      "marc_245_ind3",         // invalid indicator number
+      "marc_245_ind1_ab_a",    // multi-char indicator value
+      "marc_"                  // no tag
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("malformedMarcFieldNames")
+  void shouldRejectMalformedMarcFieldEvenWithPlaceholder(String fieldName) {
+    Map<String, String> actualErrors =
+      fqlValidationService.validateFql(marcEntityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
+    assertEquals(1, actualErrors.size());
+    assertTrue(actualErrors.containsKey(fieldName));
   }
 }

@@ -75,6 +75,11 @@ public class FqlValidationService {
       .orElse(null);
 
     if (column == null) {
+      // No declared column matched; the name may still be a dynamic MARC field. MARC references are always
+      // flat, so anything with subfields cannot be one.
+      if (search.getSubFields().isEmpty()) {
+        return MarcFieldFactory.resolveMarcField(search.getColumnName(), entityType);
+      }
       return Optional.empty();
     }
 

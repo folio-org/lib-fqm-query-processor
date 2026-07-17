@@ -1,3 +1,6 @@
+## 4.2.0
+- [LIBFQMQUER-20](https://folio-org.atlassian.net/browse/LIBFQMQUER-20): Support MARC field parsing and MARC-aware validation
+
 ## 4.1.0
 - [MODFQMMGR-889](https://folio-org.atlassian.net/browse/MODFQMMGR-889): Remove unsupported `contains` operators for predefined repeatable fields
 - [MODFQMMGR-1056](https://folio-org.atlassian.net/browse/MODFQMMGR-1056): Improve support for JSONB arrays
