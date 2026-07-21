@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class FqlValidationServiceTest {
 
@@ -76,6 +77,27 @@ class FqlValidationServiceTest {
         ),
         new EntityTypeColumn().name("hasValidIdColumn").dataType(new StringType()).idColumnName("field1"),
         new EntityTypeColumn().name("hasInvalidIdColumn").dataType(new StringType()).idColumnName("does-not-exist")
+      )
+    );
+
+  // Entity type that supports dynamic MARC fields, signalled by the hidden generic "marc" placeholder.
+  private static final EntityType marcEntityType = new EntityType()
+    .name("marc_entity_type")
+    .columns(
+      List.of(
+        new EntityTypeColumn().name("field1").dataType(new StringType()),
+        new EntityTypeColumn().name("marc").dataType(new MarcType().dataType("marcType"))
+      )
+    );
+
+  // Composite entity type whose source columns (including the marc placeholders) carry a source-alias prefix.
+  private static final EntityType compositeMarcEntityType = new EntityType()
+    .name("composite_marc_entity_type")
+    .columns(
+      List.of(
+        new EntityTypeColumn().name("marc_bib.external_hrid").dataType(new StringType()),
+        new EntityTypeColumn().name("marc_bib.marc").dataType(new MarcType().dataType("marcType")),
+        new EntityTypeColumn().name("marc_authority.marc").dataType(new MarcType().dataType("marcType"))
       )
     );
 
@@ -273,16 +295,6 @@ class FqlValidationServiceTest {
     assertTrue(FqlValidationService.findFieldDefinitionForQuerying(new FqlField(search), entityType).isEmpty());
   }
 
-  // Entity type that supports dynamic MARC fields, signalled by the hidden generic "marc" placeholder.
-  private static final EntityType marcEntityType = new EntityType()
-    .name("marc_entity_type")
-    .columns(
-      List.of(
-        new EntityTypeColumn().name("field1").dataType(new StringType()),
-        new EntityTypeColumn().name("marc").dataType(new MarcType().dataType("marcType"))
-      )
-    );
-
   static List<String> validMarcFieldNames() {
     return List.of(
       "marc_245",              // tag-only (data field)
@@ -330,6 +342,29 @@ class FqlValidationServiceTest {
   void shouldRejectMalformedMarcFieldEvenWithPlaceholder(String fieldName) {
     Map<String, String> actualErrors =
       fqlValidationService.validateFql(marcEntityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
+    assertEquals(1, actualErrors.size());
+    assertTrue(actualErrors.containsKey(fieldName));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "marc_bib.marc_245",
+    "marc_bib.marc_245_a",
+    "marc_bib.marc_245_ind1_7_a",
+    "marc_authority.marc_100_a"
+  })
+  void shouldValidateSourcePrefixedMarcFieldAgainstItsSource(String fieldName) {
+    Map<String, String> actualErrors =
+      fqlValidationService.validateFql(compositeMarcEntityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
+    assertEquals(Map.of(), actualErrors);
+  }
+
+  @Test
+  void shouldRejectSourcePrefixedMarcFieldWhenSourceHasNoPlaceholder() {
+    // Valid MARC shape, but marc_holdings is not a declared MARC source on this composite.
+    String fieldName = "marc_holdings.marc_245_a";
+    Map<String, String> actualErrors =
+      fqlValidationService.validateFql(compositeMarcEntityType, "{ \"%s\": { \"$eq\": \"x\" } }".formatted(fieldName));
     assertEquals(1, actualErrors.size());
     assertTrue(actualErrors.containsKey(fieldName));
   }

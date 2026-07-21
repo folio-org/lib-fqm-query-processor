@@ -38,6 +38,25 @@ class MarcFieldFactoryTest {
       .columns(List.of(new EntityTypeColumn().name("field1").dataType(new StringType())));
   }
 
+  private static EntityType compositeEntityType() {
+    return new EntityType()
+      .name("composite_entity_type")
+      .columns(List.of(
+        new EntityTypeColumn().name("marc_bib.field1").dataType(new StringType()),
+        new EntityTypeColumn().name("marc_bib.marc").dataType(new MarcType().dataType("marcType"))
+      ));
+  }
+
+  // Composite declaring two MARC sources; the field's own prefix must select the matching placeholder.
+  private static EntityType multiSourceCompositeEntityType() {
+    return new EntityType()
+      .name("multi_source_composite")
+      .columns(List.of(
+        new EntityTypeColumn().name("marc_bib.marc").dataType(new MarcType().dataType("marcType")),
+        new EntityTypeColumn().name("marc_authority.marc").dataType(new MarcType().dataType("marcType"))
+      ));
+  }
+
   @ParameterizedTest
   @CsvSource({
     // fieldName,             tag, subfield, indNumber, indValue, labelAlias
@@ -60,6 +79,33 @@ class MarcFieldFactoryTest {
     assertEquals(emptyToNull(indNumber), parsed.indicatorNumber());
     assertEquals(emptyToNull(indValue), parsed.indicatorValue());
     assertEquals(labelAlias, parsed.labelAlias());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    // fieldName,                     source,          tag, subfield, placeholderName
+    "marc_bib.marc_245,               marc_bib,        245, ,         marc_bib.marc",
+    "marc_bib.marc_245_a,             marc_bib,        245, a,        marc_bib.marc",
+    "marc_authority.marc_245_a,       marc_authority,  245, a,        marc_authority.marc",
+    "MARC_BIB.MARC_245_A,             MARC_BIB,        245, a,        MARC_BIB.marc",
+    "a.b.marc_245_a,                  a.b,             245, a,        a.b.marc"
+  })
+  void shouldParseSourcePrefixedForms(String fieldName, String source, String tag, String subfield,
+                                      String placeholderName) {
+    MarcFieldName parsed = MarcFieldFactory.parse(fieldName).orElseThrow();
+    // The original name is preserved verbatim (prefix included), while source/tag/subfield are split out.
+    assertEquals(fieldName, parsed.fieldName());
+    assertEquals(source, parsed.source());
+    assertEquals(tag, parsed.tag());
+    assertEquals(emptyToNull(subfield), parsed.subfield());
+    assertEquals(placeholderName, parsed.placeholderName());
+  }
+
+  @Test
+  void shouldParseUnprefixedFieldWithNullSource() {
+    MarcFieldName parsed = MarcFieldFactory.parse("marc_245_a").orElseThrow();
+    assertNull(parsed.source());
+    assertEquals("marc", parsed.placeholderName());
   }
 
   @ParameterizedTest
@@ -187,6 +233,64 @@ class MarcFieldFactoryTest {
   }
 
   @Test
+  void isGenericMarcPlaceholderAcceptsSourcePrefixedName() {
+    // Composite placeholder: <source>.marc with a chain is also accepted.
+    assertTrue(MarcFieldFactory.isGenericMarcPlaceholder(
+      new EntityTypeColumn().name("marc_bib.marc").dataType(new MarcType().dataType("marcType"))));
+    assertTrue(MarcFieldFactory.isGenericMarcPlaceholder(
+      new EntityTypeColumn().name("a.b.marc").dataType(new MarcType().dataType("marcType"))));
+    // A prefixed non-placeholder column is not the placeholder.
+    assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
+      new EntityTypeColumn().name("marc_bib.not_marc").dataType(new MarcType().dataType("marcType"))));
+  }
+
+  @Test
+  void findMarcPlaceholderByFieldSelectsMatchingSource() {
+    EntityType composite = multiSourceCompositeEntityType();
+
+    MarcFieldName bibField = MarcFieldFactory.parse("marc_bib.marc_245_a").orElseThrow();
+    assertEquals("marc_bib.marc",
+      MarcFieldFactory.findMarcPlaceholder(composite, bibField).orElseThrow().getName());
+
+    MarcFieldName authorityField = MarcFieldFactory.parse("marc_authority.marc_100_a").orElseThrow();
+    assertEquals("marc_authority.marc",
+      MarcFieldFactory.findMarcPlaceholder(composite, authorityField).orElseThrow().getName());
+
+    // A field whose source has no matching placeholder resolves to nothing.
+    MarcFieldName unknownSource = MarcFieldFactory.parse("marc_holdings.marc_245_a").orElseThrow();
+    assertTrue(MarcFieldFactory.findMarcPlaceholder(composite, unknownSource).isEmpty());
+  }
+
+  @Test
+  void findMarcPlaceholderByFieldReturnsEmptyForNullArgs() {
+    MarcFieldName field = MarcFieldFactory.parse("marc_245_a").orElseThrow();
+    assertTrue(MarcFieldFactory.findMarcPlaceholder(null, field).isEmpty());
+    assertTrue(MarcFieldFactory.findMarcPlaceholder(marcEntityType(), null).isEmpty());
+  }
+
+  @Test
+  void resolveMarcFieldResolvesSourcePrefixedField() {
+    Optional<Field> resolved = MarcFieldFactory.resolveMarcField("marc_bib.marc_245_a", compositeEntityType());
+    assertTrue(resolved.isPresent());
+    // The synthetic column keeps the fully-qualified (prefixed) name.
+    assertEquals("marc_bib.marc_245_a", ((EntityTypeColumn) resolved.get()).getName());
+
+    // A valid MARC shape but a source the composite doesn't declare is not resolvable.
+    assertTrue(MarcFieldFactory.resolveMarcField("marc_authority.marc_245_a", compositeEntityType()).isEmpty());
+  }
+
+  @Test
+  void addSyntheticColumnsAppendsSourcePrefixedColumns() {
+    EntityType result = MarcFieldFactory.addSyntheticColumns(
+      multiSourceCompositeEntityType(),
+      Arrays.asList("marc_bib.marc_245_a", "marc_authority.marc_100_a", "marc_holdings.marc_245_a", "marc_245_a"));
+
+    // Both declared sources are synthesized; the undeclared source and the un-prefixed name are skipped.
+    assertEquals(List.of("marc_bib.marc", "marc_authority.marc", "marc_bib.marc_245_a", "marc_authority.marc_100_a"),
+      result.getColumns().stream().map(EntityTypeColumn::getName).toList());
+  }
+
+  @Test
   void getReferencedMarcFieldNamesScansRawQueryKeys() {
     String rawQuery = """
       {
@@ -198,6 +302,22 @@ class MarcFieldFactoryTest {
       }
       """;
     assertEquals(List.of("marc_245_a", "marc_008"),
+      List.copyOf(MarcFieldFactory.getReferencedMarcFieldNames(rawQuery)));
+  }
+
+  @Test
+  void getReferencedMarcFieldNamesScansSourcePrefixedRawQueryKeys() {
+    String rawQuery = """
+      {
+        "$and": [
+          { "marc_bib.marc_245_a": { "$eq": "x" } },
+          { "marc_bib.external_hrid": { "$eq": "y" } },
+          { "marc_authority.marc_100": { "$empty": false } }
+        ]
+      }
+      """;
+    // Prefixed MARC keys are captured whole (not truncated at the dot); the non-MARC prefixed key is excluded.
+    assertEquals(List.of("marc_bib.marc_245_a", "marc_authority.marc_100"),
       List.copyOf(MarcFieldFactory.getReferencedMarcFieldNames(rawQuery)));
   }
 

@@ -35,6 +35,9 @@ public class MarcFieldFactory {
    */
   public static final String GENERIC_MARC_COLUMN_NAME = "marc";
 
+  // Suffix a composite's source-prefixed placeholder ends with, e.g. "marc_bib.marc" (chains too: "a.b.marc").
+  private static final String SOURCE_PLACEHOLDER_SUFFIX = "." + GENERIC_MARC_COLUMN_NAME;
+
   // Tag-only form (e.g. marc_245). Matches any subfield of the tag, and is the only valid form for control
   // fields. All patterns match case-insensitively (MARC_245 behaves the same as marc_245).
   private static final Pattern TAG_PATTERN =
@@ -57,7 +60,8 @@ public class MarcFieldFactory {
 
   // Generic scanner for JSON field-name keys in a raw FQL query. It intentionally does NOT encode the MARC
   // grammar. Every candidate key is validated through parse()/isMarcFieldName, so the grammar lives in one place.
-  private static final Pattern QUERY_FIELD_KEY_PATTERN = Pattern.compile("\"(?<field>\\w+)\"\\s*:");
+  // The class allows dots so composite-prefixed keys (marc_bib.marc_245_a) are captured whole, not truncated.
+  private static final Pattern QUERY_FIELD_KEY_PATTERN = Pattern.compile("\"(?<field>[\\w.]+)\"\\s*:");
 
   public static boolean isMarcFieldName(String fieldName) {
     return parse(fieldName).isPresent();
@@ -69,12 +73,24 @@ public class MarcFieldFactory {
       return Optional.empty();
     }
 
+    // On composite entity types the field carries a source-alias prefix (marc_bib.marc_245_a), possibly a chain
+    // (a.b.marc_245_a). The marc_* core never contains a dot, so the last dot is always the source/core boundary;
+    // split there with a plain string op (no regex backtracking). The shape patterns below validate the core.
+    String source = null;
+    String core = fieldName;
+    int lastDot = fieldName.lastIndexOf('.');
+    if (lastDot > 0) {
+      source = fieldName.substring(0, lastDot);
+      core = fieldName.substring(lastDot + 1);
+    }
+
     // Control fields (001-009) have no subfields or indicators, so only the tag-only form is valid for them.
-    Matcher subfieldMatcher = SUBFIELD_PATTERN.matcher(fieldName);
+    Matcher subfieldMatcher = SUBFIELD_PATTERN.matcher(core);
     if (subfieldMatcher.matches() && !isControlFieldTag(subfieldMatcher.group("tag"))) {
       // Preserve the original field name; normalize the subfield code to lower case to match storage.
       return Optional.of(new MarcFieldName(
         fieldName,
+        source,
         subfieldMatcher.group("tag"),
         subfieldMatcher.group("subfield").toLowerCase(),
         null,
@@ -82,10 +98,11 @@ public class MarcFieldFactory {
       ));
     }
 
-    Matcher constrainedMatcher = CONSTRAINED_SUBFIELD_PATTERN.matcher(fieldName);
+    Matcher constrainedMatcher = CONSTRAINED_SUBFIELD_PATTERN.matcher(core);
     if (constrainedMatcher.matches() && !isControlFieldTag(constrainedMatcher.group("tag"))) {
       return Optional.of(new MarcFieldName(
         fieldName,
+        source,
         constrainedMatcher.group("tag"),
         constrainedMatcher.group("subfield").toLowerCase(),
         constrainedMatcher.group("indicator"),
@@ -93,10 +110,11 @@ public class MarcFieldFactory {
       ));
     }
 
-    Matcher indicatorMatcher = INDICATOR_PATTERN.matcher(fieldName);
+    Matcher indicatorMatcher = INDICATOR_PATTERN.matcher(core);
     if (indicatorMatcher.matches() && !isControlFieldTag(indicatorMatcher.group("tag"))) {
       return Optional.of(new MarcFieldName(
         fieldName,
+        source,
         indicatorMatcher.group("tag"),
         null,
         indicatorMatcher.group("indicator"),
@@ -104,9 +122,9 @@ public class MarcFieldFactory {
       ));
     }
 
-    Matcher tagMatcher = TAG_PATTERN.matcher(fieldName);
+    Matcher tagMatcher = TAG_PATTERN.matcher(core);
     if (tagMatcher.matches()) {
-      return Optional.of(new MarcFieldName(fieldName, tagMatcher.group("tag"), null, null, null));
+      return Optional.of(new MarcFieldName(fieldName, source, tagMatcher.group("tag"), null, null, null));
     }
 
     return Optional.empty();
@@ -152,11 +170,27 @@ public class MarcFieldFactory {
       .findFirst();
   }
 
-  /** Whether the column is the generic {@code marc} capability placeholder (see {@link #GENERIC_MARC_COLUMN_NAME}). */
+  /**
+   * The specific MARC placeholder a parsed field correlates against, matched by name
+   * ({@link MarcFieldName#placeholderName()} — {@code marc}, or {@code <source>.marc} on a composite). A composite
+   * may declare more than one MARC source, so the field's own prefix selects the right one.
+   */
+  public static Optional<EntityTypeColumn> findMarcPlaceholder(EntityType entityType, MarcFieldName marcField) {
+    if (entityType == null || entityType.getColumns() == null || marcField == null) {
+      return Optional.empty();
+    }
+    String placeholderName = marcField.placeholderName();
+    return entityType.getColumns().stream()
+      .filter(column -> column.getDataType() instanceof MarcType && placeholderName.equals(column.getName()))
+      .findFirst();
+  }
+
   public static boolean isGenericMarcPlaceholder(EntityTypeColumn column) {
-    return column != null
-      && GENERIC_MARC_COLUMN_NAME.equals(column.getName())
-      && column.getDataType() instanceof MarcType;
+    if (column == null || !(column.getDataType() instanceof MarcType)) {
+      return false;
+    }
+    String name = column.getName();
+    return GENERIC_MARC_COLUMN_NAME.equals(name) || name.endsWith(SOURCE_PLACEHOLDER_SUFFIX);
   }
 
   /**
@@ -180,8 +214,7 @@ public class MarcFieldFactory {
    * entity type is not mutated. The synthesized columns carry no SQL — see {@link #toColumn(MarcFieldName)}.
    */
   public static EntityType addSyntheticColumns(EntityType entityType, Collection<String> fieldNames) {
-    if (fieldNames == null || fieldNames.isEmpty()
-      || entityType == null || entityType.getColumns() == null
+    if (fieldNames == null || fieldNames.isEmpty() || entityType == null || entityType.getColumns() == null
       || findMarcPlaceholder(entityType).isEmpty()) {
       return entityType;
     }
@@ -195,10 +228,14 @@ public class MarcFieldFactory {
       if (fieldName == null || existingFieldNames.contains(fieldName)) {
         continue;
       }
-      parse(fieldName).map(MarcFieldFactory::toColumn).ifPresent(column -> {
-        updatedColumns.add(column);
-        existingFieldNames.add(fieldName);
-      });
+      // Synthesize only when the name parses AND the source's placeholder is present (so a composite correlates
+      // against the right source). Non-MARC names, and fields whose placeholder is absent, are skipped.
+      parse(fieldName)
+        .filter(field -> findMarcPlaceholder(entityType, field).isPresent())
+        .ifPresent(field -> {
+          updatedColumns.add(toColumn(field));
+          existingFieldNames.add(fieldName);
+        });
     }
 
     return entityType.toBuilder().columns(updatedColumns).build();
@@ -210,10 +247,11 @@ public class MarcFieldFactory {
    * support keep rejecting {@code marc_*} references.
    */
   public static Optional<Field> resolveMarcField(String fieldName, EntityType entityType) {
-    if (findMarcPlaceholder(entityType).isEmpty()) {
+    Optional<MarcFieldName> parsed = parse(fieldName);
+    if (parsed.isEmpty() || findMarcPlaceholder(entityType, parsed.get()).isEmpty()) {
       return Optional.empty();
     }
-    return parse(fieldName).<Field>map(MarcFieldFactory::toColumn);
+    return Optional.<Field>of(toColumn(parsed.get()));
   }
 
   // MARC control fields are tags 001-009 (the only valid tags starting with "00"); they have no indicators or
