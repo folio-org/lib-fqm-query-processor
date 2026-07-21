@@ -38,7 +38,6 @@ class MarcFieldFactoryTest {
       .columns(List.of(new EntityTypeColumn().name("field1").dataType(new StringType())));
   }
 
-  // Composite entity type: source columns (including the marc placeholder) carry a source-alias prefix.
   private static EntityType compositeEntityType() {
     return new EntityType()
       .name("composite_entity_type")
@@ -242,7 +241,7 @@ class MarcFieldFactoryTest {
       new EntityTypeColumn().name("a.b.marc").dataType(new MarcType().dataType("marcType"))));
     // A prefixed non-placeholder column is not the placeholder.
     assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
-      new EntityTypeColumn().name("marc_bib.marc_245_a").dataType(new MarcType().dataType("marcType"))));
+      new EntityTypeColumn().name("marc_bib.not_marc").dataType(new MarcType().dataType("marcType"))));
   }
 
   @Test
