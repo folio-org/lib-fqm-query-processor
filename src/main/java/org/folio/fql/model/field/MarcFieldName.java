@@ -14,7 +14,10 @@ package org.folio.fql.model.field;
  *   <li>constrained-subfield: {@code indicatorNumber} + {@code indicatorValue} (fixed) + {@code subfield}</li>
  * </ul>
  *
- * @param fieldName       the original field name as referenced in the query (name preserved verbatim)
+ * @param fieldName       the original field name as referenced in the query (name preserved verbatim,
+ *                        including any composite source-alias prefix such as {@code marc_bib.})
+ * @param source          the composite source-alias prefix (e.g. {@code marc_bib}), or null for a
+ *                        non-composite (simple) entity type where the field is un-prefixed
  * @param tag             the three-digit MARC tag
  * @param subfield        the subfield code (lower-cased), or null when not targeting a subfield
  * @param indicatorNumber "1" or "2" when an indicator is involved, otherwise null
@@ -23,6 +26,7 @@ package org.folio.fql.model.field;
  */
 public record MarcFieldName(
   String fieldName,
+  String source,
   String tag,
   String subfield,
   String indicatorNumber,
@@ -33,6 +37,16 @@ public record MarcFieldName(
   public static final String BLANK_INDICATOR_TOKEN = "blank";
   /** How a blank indicator is stored in the MARC indexers table. */
   public static final String BLANK_INDICATOR_STORAGE = "#";
+  private static final String PLACEHOLDER_COLUMN = "marc";
+
+  /**
+   * Name of the generic MARC placeholder column this field correlates against: {@code marc} on a simple entity
+   * type, or {@code <source>.marc} on a composite (where {@code source} may itself be a chain of aliases, e.g.
+   * {@code a.b.marc} for a composite of a composite).
+   */
+  public String placeholderName() {
+    return source == null ? PLACEHOLDER_COLUMN : source + "." + PLACEHOLDER_COLUMN;
+  }
 
   /**
    * True only for the indicator-only form, where the query targets the indicator itself. When a fixed
