@@ -304,6 +304,10 @@ class FqlValidationServiceTest {
       "marc_245_ind2",         // indicator-only
       "marc_245_ind1_7_a",     // constrained subfield (alphanumeric indicator)
       "marc_245_ind1_blank_a", // constrained subfield (blank indicator)
+      "marc_650_ind1_1_ind2_0_x",   // both indicators constrained + subfield target
+      "marc_650_ind1_blank_ind2_2_x", // both constrained (blank ind1) + subfield
+      "marc_245_ind1_1_ind2",       // ind1 constrained, ind2 target
+      "marc_245_ind2_1_ind1",       // ind2 constrained, ind1 target
       "MARC_245_A"             // case-insensitive
     );
   }
