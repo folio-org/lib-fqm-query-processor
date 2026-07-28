@@ -6,12 +6,21 @@ package org.folio.fql.model.field;
  * representation shared across modules; it carries no SQL or storage concerns (those live in the module that
  * generates SQL from it).
  *
+ * <p>An indicator may play one of two roles: a constraint (fixed to a value that is matched on the same
+ * row — {@code ind1Value}/{@code ind2Value}) or the target ({@code targetIndicator}, the indicator whose
+ * values are returned/queried). At most one indicator is the target; the other, if present, is a constraint.
+ *
  * <p>Supported forms:
  * <ul>
- *   <li>tag-only: {@code subfield}, {@code indicatorNumber}, {@code indicatorValue} all null</li>
- *   <li>subfield: {@code subfield} set</li>
- *   <li>indicator-only: {@code indicatorNumber} ("1"/"2") set, {@code indicatorValue} null (targets the indicator)</li>
- *   <li>constrained-subfield: {@code indicatorNumber} + {@code indicatorValue} (fixed) + {@code subfield}</li>
+ *   <li>tag-only ({@code marc_245}): no constraints, no target subfield/indicator</li>
+ *   <li>subfield ({@code marc_245_a}): {@code subfield} set, no constraints</li>
+ *   <li>indicator target ({@code marc_245_ind1}): {@code targetIndicator} set, no constraints</li>
+ *   <li>constrained subfield, one indicator ({@code marc_245_ind1_7_a}): one of {@code ind1Value}/{@code
+ *       ind2Value} + {@code subfield}</li>
+ *   <li>constrained subfield, both indicators ({@code marc_245_ind1_1_ind2_2_a}): {@code ind1Value} +
+ *       {@code ind2Value} + {@code subfield}</li>
+ *   <li>indicator target with the other constrained ({@code marc_245_ind1_1_ind2} /
+ *       {@code marc_245_ind2_1_ind1}): one indicator value + {@code targetIndicator} = the other indicator</li>
  * </ul>
  *
  * @param fieldName       the original field name as referenced in the query (name preserved verbatim,
@@ -20,17 +29,21 @@ package org.folio.fql.model.field;
  *                        non-composite (simple) entity type where the field is un-prefixed
  * @param tag             the three-digit MARC tag
  * @param subfield        the subfield code (lower-cased), or null when not targeting a subfield
- * @param indicatorNumber "1" or "2" when an indicator is involved, otherwise null
- * @param indicatorValue  the fixed indicator value (normalized: {@code blank} -> {@code #}, else lower-cased)
- *                        for the constrained-subfield form; null otherwise
+ * @param ind1Value       the fixed value ind1 is constrained to (normalized: {@code blank} -> {@code #}, else
+ *                        lower-cased), or null when ind1 is not a constraint
+ * @param ind2Value       the fixed value ind2 is constrained to (same normalization), or null when ind2 is not a
+ *                        constraint
+ * @param targetIndicator "1" or "2" when an indicator is the target (its values are returned/queried); null when
+ *                        the target is a subfield value or the whole tag
  */
 public record MarcFieldName(
   String fieldName,
   String source,
   String tag,
   String subfield,
-  String indicatorNumber,
-  String indicatorValue
+  String ind1Value,
+  String ind2Value,
+  String targetIndicator
 ) {
 
   /** Public token used in field names / labels for a blank indicator (e.g. {@code marc_245_ind1_blank_a}). */
@@ -49,26 +62,38 @@ public record MarcFieldName(
   }
 
   /**
-   * True only for the indicator-only form, where the query targets the indicator itself. When a fixed
-   * {@code indicatorValue} is present the indicator is a constraint and the subfield is the target.
+   * True when an indicator is the target (the query returns/matches that indicator's values). When both indicators
+   * are only constraints, or the target is a subfield/tag value, this is false.
    */
   public boolean isIndicatorTarget() {
-    return indicatorNumber != null && indicatorValue == null;
+    return targetIndicator != null;
   }
 
   /**
-   * Human-readable label, e.g. "MARC 245" (tag-only), "MARC 245$a" (subfield), "MARC 245 ind1" (indicator),
-   * "MARC 245 ind1=blank $a" (constrained subfield). The public {@code blank} token is shown rather than the
-   * stored {@code #}.
+   * Human-readable label. Examples: "MARC 245" (tag-only), "MARC 245$a" (subfield), "MARC 245 ind1" (indicator
+   * target), "MARC 245 ind1=7 $a" (constrained subfield), "MARC 245 ind1=1 ind2=2 $a" (both constrained),
+   * "MARC 245 ind1=1 ind2" (ind1 constrained, ind2 target). The public {@code blank} token is shown rather than
+   * the stored {@code #}.
    */
   public String labelAlias() {
-    if (isIndicatorTarget()) {
-      return "MARC %s ind%s".formatted(tag, indicatorNumber);
+    StringBuilder label = new StringBuilder("MARC ").append(tag);
+    boolean hasConstraint = ind1Value != null || ind2Value != null;
+    if (ind1Value != null) {
+      label.append(" ind1=").append(displayIndicatorValue(ind1Value));
     }
-    if (indicatorValue != null) {
-      String displayValue = BLANK_INDICATOR_STORAGE.equals(indicatorValue) ? BLANK_INDICATOR_TOKEN : indicatorValue;
-      return "MARC %s ind%s=%s $%s".formatted(tag, indicatorNumber, displayValue, subfield);
+    if (ind2Value != null) {
+      label.append(" ind2=").append(displayIndicatorValue(ind2Value));
     }
-    return subfield == null ? "MARC %s".formatted(tag) : "MARC %s$%s".formatted(tag, subfield);
+    if (targetIndicator != null) {
+      label.append(" ind").append(targetIndicator);
+    } else if (subfield != null) {
+      // Attached ("MARC 245$a") when unconstrained; spaced ("... $a") when following a constraint.
+      label.append(hasConstraint ? " $" : "$").append(subfield);
+    }
+    return label.toString();
+  }
+
+  private static String displayIndicatorValue(String storedValue) {
+    return BLANK_INDICATOR_STORAGE.equals(storedValue) ? BLANK_INDICATOR_TOKEN : storedValue;
   }
 }

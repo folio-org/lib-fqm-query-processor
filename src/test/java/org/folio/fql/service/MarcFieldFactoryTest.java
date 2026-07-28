@@ -59,25 +59,34 @@ class MarcFieldFactoryTest {
 
   @ParameterizedTest
   @CsvSource({
-    // fieldName,             tag, subfield, indNumber, indValue, labelAlias
-    "marc_245,               245, ,         ,          ,         MARC 245",
-    "marc_008,               008, ,         ,          ,         MARC 008",
-    "marc_245_a,             245, a,        ,          ,         MARC 245$a",
-    "MARC_245_A,             245, a,        ,          ,         MARC 245$a",
-    "marc_245_ind1,          245, ,         1,         ,         MARC 245 ind1",
-    "marc_245_ind2,          245, ,         2,         ,         MARC 245 ind2",
-    "marc_245_ind1_7_a,      245, a,        1,         7,        MARC 245 ind1=7 $a",
-    "marc_245_ind1_blank_a,  245, a,        1,         #,        MARC 245 ind1=blank $a",
-    "marc_245_ind2_X_b,      245, b,        2,         x,        MARC 245 ind2=x $b"
+    // fieldName,                    tag, subfield, ind1, ind2, target, labelAlias
+    "marc_245,                       245, ,        ,     ,     ,       MARC 245",
+    "marc_008,                       008, ,        ,     ,     ,       MARC 008",
+    "marc_245_a,                     245, a,       ,     ,     ,       MARC 245$a",
+    "MARC_245_A,                     245, a,       ,     ,     ,       MARC 245$a",
+    "marc_245_ind1,                  245, ,        ,     ,     1,      MARC 245 ind1",
+    "marc_245_ind2,                  245, ,        ,     ,     2,      MARC 245 ind2",
+    "marc_245_ind1_7_a,              245, a,       7,    ,     ,       MARC 245 ind1=7 $a",
+    "marc_245_ind1_blank_a,          245, a,       #,    ,     ,       MARC 245 ind1=blank $a",
+    "marc_245_ind2_X_b,              245, b,       ,     x,    ,       MARC 245 ind2=x $b",
+    // multi-indicator: both indicators constrained + subfield target
+    "marc_245_ind1_1_ind2_2_a,       245, a,       1,    2,    ,       MARC 245 ind1=1 ind2=2 $a",
+    "marc_650_ind1_1_ind2_0_x,       650, x,       1,    0,    ,       MARC 650 ind1=1 ind2=0 $x",
+    "marc_650_ind1_blank_ind2_2_x,   650, x,       #,    2,    ,       MARC 650 ind1=blank ind2=2 $x",
+    "marc_041_ind1_1_ind2_7_2,       041, 2,       1,    7,    ,       MARC 041 ind1=1 ind2=7 $2",
+    // multi-indicator: one indicator constrained, the other is the target
+    "marc_245_ind1_1_ind2,           245, ,        1,    ,     2,      MARC 245 ind1=1 ind2",
+    "marc_245_ind2_1_ind1,           245, ,        ,     1,    1,      MARC 245 ind2=1 ind1"
   })
-  void shouldParseSupportedForms(String fieldName, String tag, String subfield, String indNumber,
-                                 String indValue, String labelAlias) {
+  void shouldParseSupportedForms(String fieldName, String tag, String subfield, String ind1, String ind2,
+                                 String target, String labelAlias) {
     MarcFieldName parsed = MarcFieldFactory.parse(fieldName).orElseThrow();
     assertEquals(fieldName, parsed.fieldName());
     assertEquals(tag, parsed.tag());
     assertEquals(emptyToNull(subfield), parsed.subfield());
-    assertEquals(emptyToNull(indNumber), parsed.indicatorNumber());
-    assertEquals(emptyToNull(indValue), parsed.indicatorValue());
+    assertEquals(emptyToNull(ind1), parsed.ind1Value());
+    assertEquals(emptyToNull(ind2), parsed.ind2Value());
+    assertEquals(emptyToNull(target), parsed.targetIndicator());
     assertEquals(labelAlias, parsed.labelAlias());
   }
 
@@ -117,6 +126,13 @@ class MarcFieldFactoryTest {
     "marc_245_ind3",       // invalid indicator number
     "marc_245_ind1_ab_a",  // multi-char indicator value
     "marc_245_ind1_7_ab",  // multi-char subfield
+    "marc_245_ind1_1_ind1",       // multi-indicator: constraint and target are the same indicator
+    "marc_245_ind2_1_ind2",       // multi-indicator: same indicator (ind2/ind2)
+    "marc_245_ind2_2_ind1_1_a",   // multi-indicator: non-canonical order (ind2 before ind1) for both constraints
+    "marc_245_ind1_1_ind2_ab_a",  // multi-indicator: multi-char ind2 value
+    "marc_008_ind1_7_a",          // control field cannot use a constrained subfield
+    "marc_008_ind1_1_ind2_2_a",   // control field cannot use a dual-indicator subfield
+    "marc_008_ind1_1_ind2",       // control field cannot use a constrained indicator-target
     "marc_",               // no tag
     "not_a_marc_field"
   })
@@ -133,8 +149,11 @@ class MarcFieldFactoryTest {
 
   @ParameterizedTest
   @CsvSource({
-    "marc_245_ind1, true",   // indicator-only targets the indicator
-    "marc_245_ind1_7_a, false", // constrained subfield targets the subfield
+    "marc_245_ind1, true",           // indicator-only targets the indicator
+    "marc_245_ind1_1_ind2, true",    // one constrained, the other indicator is the target
+    "marc_245_ind2_1_ind1, true",    // mirror
+    "marc_245_ind1_7_a, false",      // constrained subfield targets the subfield
+    "marc_245_ind1_1_ind2_2_a, false", // both constrained, subfield is the target
     "marc_245_a, false",
     "marc_245, false"
   })

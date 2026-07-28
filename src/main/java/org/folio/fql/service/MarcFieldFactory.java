@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.experimental.UtilityClass;
 import org.folio.fql.model.AndCondition;
 import org.folio.fql.model.FieldCondition;
@@ -52,10 +53,24 @@ public class MarcFieldFactory {
   private static final Pattern INDICATOR_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})_ind(?<indicator>[12])$", Pattern.CASE_INSENSITIVE);
 
-  // Constrained-subfield form (e.g. marc_245_ind1_7_a, marc_245_ind1_blank_a). A subfield value target with the
+  // Constrained-subfield form (e.g. marc_245_ind1_7_a, marc_245_ind1_blank_a). A subfield value target with one
   // indicator fixed to a constant matched on the same row. Data-field tags (010+) only.
   private static final Pattern CONSTRAINED_SUBFIELD_PATTERN = Pattern.compile(
     "^marc_(?<tag>\\d{3})_ind(?<indicator>[12])_(?<indValue>blank|[a-z0-9])_(?<subfield>[a-z0-9])$",
+    Pattern.CASE_INSENSITIVE);
+
+  // Two-indicator constrained-subfield form (e.g. marc_245_ind1_1_ind2_2_a): ind1 and ind2 both pinned to fixed
+  // values (canonical ind1-then-ind2 order) with a subfield value target. Data-field tags (010+) only.
+  private static final Pattern DUAL_INDICATOR_SUBFIELD_PATTERN = Pattern.compile(
+    "^marc_(?<tag>\\d{3})_ind1_(?<ind1>blank|[a-z0-9])_ind2_(?<ind2>blank|[a-z0-9])_(?<subfield>[a-z0-9])$",
+    Pattern.CASE_INSENSITIVE);
+
+  // Indicator-target form with the other indicator constrained (e.g. marc_245_ind1_1_ind2 targets ind2 with ind1
+  // fixed; marc_245_ind2_1_ind1 targets ind1 with ind2 fixed). The leading indicator carries a value (the
+  // constraint); the trailing bare indicator is the target. The two indicators must differ (validated in parse).
+  // Data-field tags only.
+  private static final Pattern CONSTRAINED_INDICATOR_TARGET_PATTERN = Pattern.compile(
+    "^marc_(?<tag>\\d{3})_ind(?<constraintInd>[12])_(?<constraintValue>blank|[a-z0-9])_ind(?<targetInd>[12])$",
     Pattern.CASE_INSENSITIVE);
 
   // Generic scanner for JSON field-name keys in a raw FQL query. It intentionally does NOT encode the MARC
@@ -67,7 +82,9 @@ public class MarcFieldFactory {
     return parse(fieldName).isPresent();
   }
 
-  /** Parse a field name into a {@link MarcFieldName}, or empty if it is not a valid MARC field reference. */
+  /**
+   * Parse a field name into a {@link MarcFieldName}, or empty if it is not a valid MARC field reference.
+   */
   public static Optional<MarcFieldName> parse(String fieldName) {
     if (fieldName == null) {
       return Optional.empty();
@@ -84,53 +101,111 @@ public class MarcFieldFactory {
       core = fieldName.substring(lastDot + 1);
     }
 
-    // Control fields (001-009) have no subfields or indicators, so only the tag-only form is valid for them.
     Matcher subfieldMatcher = SUBFIELD_PATTERN.matcher(core);
     if (subfieldMatcher.matches() && !isControlFieldTag(subfieldMatcher.group("tag"))) {
-      // Preserve the original field name; normalize the subfield code to lower case to match storage.
-      return Optional.of(new MarcFieldName(
-        fieldName,
-        source,
-        subfieldMatcher.group("tag"),
-        subfieldMatcher.group("subfield").toLowerCase(),
-        null,
-        null
-      ));
+      return Optional.of(subfield(fieldName, source, subfieldMatcher.group("tag"), subfieldMatcher.group("subfield")));
     }
 
+    // Two indicators constrained + subfield target (marc_245_ind1_1_ind2_2_a).
+    Matcher dualIndicatorMatcher = DUAL_INDICATOR_SUBFIELD_PATTERN.matcher(core);
+    if (dualIndicatorMatcher.matches() && !isControlFieldTag(dualIndicatorMatcher.group("tag"))) {
+      return Optional.of(dualIndicatorSubfield(
+        fieldName,
+        source,
+        dualIndicatorMatcher.group("tag"),
+        dualIndicatorMatcher.group("subfield"),
+        normalizeIndicatorValue(dualIndicatorMatcher.group("ind1")),
+        normalizeIndicatorValue(dualIndicatorMatcher.group("ind2"))));
+    }
+
+    // One indicator constrained + subfield target (marc_245_ind1_7_a).
     Matcher constrainedMatcher = CONSTRAINED_SUBFIELD_PATTERN.matcher(core);
     if (constrainedMatcher.matches() && !isControlFieldTag(constrainedMatcher.group("tag"))) {
-      return Optional.of(new MarcFieldName(
+      return Optional.of(constrainedSubfield(
         fieldName,
         source,
         constrainedMatcher.group("tag"),
-        constrainedMatcher.group("subfield").toLowerCase(),
+        constrainedMatcher.group("subfield"),
         constrainedMatcher.group("indicator"),
-        normalizeIndicatorValue(constrainedMatcher.group("indValue"))
-      ));
+        normalizeIndicatorValue(constrainedMatcher.group("indValue"))));
     }
 
+    // Indicator target with the other indicator constrained (marc_245_ind1_1_ind2 / marc_245_ind2_1_ind1).
+    Matcher indTargetMatcher = CONSTRAINED_INDICATOR_TARGET_PATTERN.matcher(core);
+    if (indTargetMatcher.matches() && !isControlFieldTag(indTargetMatcher.group("tag"))) {
+      String constraintInd = indTargetMatcher.group("constraintInd");
+      String targetInd = indTargetMatcher.group("targetInd");
+      // The constrained and target indicators must differ (marc_245_ind1_1_ind1 is meaningless -> reject).
+      if (!constraintInd.equals(targetInd)) {
+        return Optional.of(constrainedIndicatorTarget(
+          fieldName,
+          source,
+          indTargetMatcher.group("tag"),
+          constraintInd,
+          normalizeIndicatorValue(indTargetMatcher.group("constraintValue")),
+          targetInd));
+      }
+    }
+
+    // Indicator target, no constraint (marc_245_ind1).
     Matcher indicatorMatcher = INDICATOR_PATTERN.matcher(core);
     if (indicatorMatcher.matches() && !isControlFieldTag(indicatorMatcher.group("tag"))) {
-      return Optional.of(new MarcFieldName(
+      return Optional.of(indicatorTarget(
         fieldName,
         source,
         indicatorMatcher.group("tag"),
-        null,
-        indicatorMatcher.group("indicator"),
-        null
-      ));
+        indicatorMatcher.group("indicator")));
     }
 
+    // Tag-only (marc_245) -- the only form valid for control fields.
     Matcher tagMatcher = TAG_PATTERN.matcher(core);
     if (tagMatcher.matches()) {
-      return Optional.of(new MarcFieldName(fieldName, source, tagMatcher.group("tag"), null, null, null));
+      return Optional.of(tagOnly(fieldName, source, tagMatcher.group("tag")));
     }
 
     return Optional.empty();
   }
 
-  /** MARC field names referenced as {@code "fieldName":} keys in a raw FQL query string. */
+  private static MarcFieldName tagOnly(String fieldName, String source, String tag) {
+    return new MarcFieldName(fieldName, source, tag, null, null, null, null);
+  }
+
+  private static MarcFieldName subfield(String fieldName, String source, String tag, String subfield) {
+    return new MarcFieldName(fieldName, source, tag, subfield.toLowerCase(), null, null, null);
+  }
+
+  private static MarcFieldName indicatorTarget(String fieldName, String source, String tag, String targetIndicator) {
+    return new MarcFieldName(fieldName, source, tag, null, null, null, targetIndicator);
+  }
+
+  private static MarcFieldName constrainedSubfield(String fieldName, String source, String tag, String subfield,
+                                                   String constraintIndicator, String constraintValue) {
+    return new MarcFieldName(fieldName, source, tag, subfield.toLowerCase(),
+      indicatorSlotValue("1", constraintIndicator, constraintValue),
+      indicatorSlotValue("2", constraintIndicator, constraintValue), null);
+  }
+
+  private static MarcFieldName dualIndicatorSubfield(String fieldName, String source, String tag, String subfield,
+                                                     String ind1Value, String ind2Value) {
+    return new MarcFieldName(fieldName, source, tag, subfield.toLowerCase(), ind1Value, ind2Value, null);
+  }
+
+  private static MarcFieldName constrainedIndicatorTarget(String fieldName, String source, String tag,
+                                                          String constraintIndicator, String constraintValue,
+                                                          String targetIndicator) {
+    return new MarcFieldName(fieldName, source, tag, null,
+      indicatorSlotValue("1", constraintIndicator, constraintValue),
+      indicatorSlotValue("2", constraintIndicator, constraintValue), targetIndicator);
+  }
+
+  // The value for indicator slot ("1"/"2") when a single indicator is constrained; null for the other slot.
+  private static String indicatorSlotValue(String slot, String constraintIndicator, String constraintValue) {
+    return slot.equals(constraintIndicator) ? constraintValue : null;
+  }
+
+  /**
+   * MARC field names referenced as {@code "fieldName":} keys in a raw FQL query string.
+   */
   public static Set<String> getReferencedMarcFieldNames(String rawQuery) {
     if (rawQuery == null || rawQuery.isBlank()) {
       return Set.of();
@@ -147,7 +222,9 @@ public class MarcFieldFactory {
     return fieldNames;
   }
 
-  /** MARC field names referenced anywhere in a parsed FQL condition tree. */
+  /**
+   * MARC field names referenced anywhere in a parsed FQL condition tree.
+   */
   public static Set<String> getReferencedMarcFieldNames(FqlCondition<?> condition) {
     if (condition instanceof FieldCondition<?> fieldCondition) {
       String fieldName = fieldCondition.field().getColumnName();
