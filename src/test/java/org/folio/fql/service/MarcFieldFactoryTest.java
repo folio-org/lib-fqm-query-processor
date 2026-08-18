@@ -77,7 +77,7 @@ class MarcFieldFactoryTest {
     // multi-indicator: one indicator constrained, the other is the target
     "marc_245_ind1_1_ind2,           245, ,        1,    ,     2,      MARC 245 ind1=1 ind2",
     "marc_245_ind2_1_ind1,           245, ,        ,     1,    1,      MARC 245 ind2=1 ind1",
-    // whole-field value with indicator constraint(s), no subfield (no target)
+    // whole-field value with indicator constraint(s), no subfield
     "marc_245_ind1_0,                245, ,        0,    ,     ,       MARC 245 ind1=0",
     "marc_245_ind2_1,                245, ,        ,     1,    ,       MARC 245 ind2=1",
     "marc_245_ind1_blank,            245, ,        #,    ,     ,       MARC 245 ind1=blank",

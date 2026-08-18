@@ -21,9 +21,11 @@ package org.folio.fql.model.field;
  *       {@code ind2Value} + {@code subfield}</li>
  *   <li>indicator target with the other constrained ({@code marc_245_ind1_1_ind2} /
  *       {@code marc_245_ind2_1_ind1}): one indicator value + {@code targetIndicator} = the other indicator</li>
- *   <li>constrained field, no subfield ({@code marc_245_ind1_0}): one or both of {@code ind1Value}/{@code
- *       ind2Value} with no {@code subfield} and no {@code targetIndicator} — the whole field value narrowed to
- *       occurrences whose indicator(s) match (e.g. "field 245 exists with ind1 = 0")</li>
+ *   <li>constrained field, one indicator ({@code marc_245_ind1_0}): one of {@code ind1Value}/{@code ind2Value},
+ *       no {@code subfield} and no {@code targetIndicator} — the whole field value narrowed to occurrences whose
+ *       indicator matches (e.g. "field 245 exists with ind1 = 0")</li>
+ *   <li>constrained field, both indicators ({@code marc_245_ind1_1_ind2_2}): {@code ind1Value} +
+ *       {@code ind2Value}, no {@code subfield} and no {@code targetIndicator}</li>
  * </ul>
  *
  * @param fieldName       the original field name as referenced in the query (name preserved verbatim,
