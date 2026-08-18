@@ -76,7 +76,12 @@ class MarcFieldFactoryTest {
     "marc_041_ind1_1_ind2_7_2,       041, 2,       1,    7,    ,       MARC 041 ind1=1 ind2=7 $2",
     // multi-indicator: one indicator constrained, the other is the target
     "marc_245_ind1_1_ind2,           245, ,        1,    ,     2,      MARC 245 ind1=1 ind2",
-    "marc_245_ind2_1_ind1,           245, ,        ,     1,    1,      MARC 245 ind2=1 ind1"
+    "marc_245_ind2_1_ind1,           245, ,        ,     1,    1,      MARC 245 ind2=1 ind1",
+    // whole-field value with indicator constraint(s), no subfield (no target)
+    "marc_245_ind1_0,                245, ,        0,    ,     ,       MARC 245 ind1=0",
+    "marc_245_ind2_1,                245, ,        ,     1,    ,       MARC 245 ind2=1",
+    "marc_245_ind1_blank,            245, ,        #,    ,     ,       MARC 245 ind1=blank",
+    "marc_245_ind1_1_ind2_2,         245, ,        1,    2,    ,       MARC 245 ind1=1 ind2=2"
   })
   void shouldParseSupportedForms(String fieldName, String tag, String subfield, String ind1, String ind2,
                                  String target, String labelAlias) {
@@ -133,6 +138,9 @@ class MarcFieldFactoryTest {
     "marc_008_ind1_7_a",          // control field cannot use a constrained subfield
     "marc_008_ind1_1_ind2_2_a",   // control field cannot use a dual-indicator subfield
     "marc_008_ind1_1_ind2",       // control field cannot use a constrained indicator-target
+    "marc_245_ind1_ab",           // constrained field: multi-char indicator value
+    "marc_008_ind1_0",            // control field cannot use a constrained field
+    "marc_008_ind1_1_ind2_2",     // control field cannot use a dual-indicator constrained field
     "marc_",               // no tag
     "not_a_marc_field"
   })
@@ -154,6 +162,8 @@ class MarcFieldFactoryTest {
     "marc_245_ind2_1_ind1, true",    // mirror
     "marc_245_ind1_7_a, false",      // constrained subfield targets the subfield
     "marc_245_ind1_1_ind2_2_a, false", // both constrained, subfield is the target
+    "marc_245_ind1_0, false",        // constrained field, no target
+    "marc_245_ind1_1_ind2_2, false", // dual constrained field, no target
     "marc_245_a, false",
     "marc_245, false"
   })

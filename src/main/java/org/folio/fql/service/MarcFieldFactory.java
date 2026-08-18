@@ -73,6 +73,19 @@ public class MarcFieldFactory {
     "^marc_(?<tag>\\d{3})_ind(?<constraintInd>[12])_(?<constraintValue>blank|[a-z0-9])_ind(?<targetInd>[12])$",
     Pattern.CASE_INSENSITIVE);
 
+  // Constrained-field form, no subfield (e.g. marc_245_ind1_0): the whole field, restricted to occurrences whose
+  // indicator is fixed to a value. The target is the field value (not the indicator), so this behaves like a
+  // value field with an indicator constraint -- enabling "field 245 exists with ind1 = 0". Data-field tags only.
+  private static final Pattern CONSTRAINED_FIELD_PATTERN = Pattern.compile(
+    "^marc_(?<tag>\\d{3})_ind(?<indicator>[12])_(?<indValue>blank|[a-z0-9])$",
+    Pattern.CASE_INSENSITIVE);
+
+  // Two-indicator constrained-field form, no subfield (e.g. marc_245_ind1_1_ind2_2): the whole field with both
+  // indicators fixed (canonical ind1-then-ind2 order). Data-field tags only.
+  private static final Pattern DUAL_INDICATOR_FIELD_PATTERN = Pattern.compile(
+    "^marc_(?<tag>\\d{3})_ind1_(?<ind1>blank|[a-z0-9])_ind2_(?<ind2>blank|[a-z0-9])$",
+    Pattern.CASE_INSENSITIVE);
+
   // Generic scanner for JSON field-name keys in a raw FQL query. It intentionally does NOT encode the MARC
   // grammar. Every candidate key is validated through parse()/isMarcFieldName, so the grammar lives in one place.
   // The class allows dots so composite-prefixed keys (marc_bib.marc_245_a) are captured whole, not truncated.
@@ -128,6 +141,28 @@ public class MarcFieldFactory {
         constrainedMatcher.group("subfield"),
         constrainedMatcher.group("indicator"),
         normalizeIndicatorValue(constrainedMatcher.group("indValue"))));
+    }
+
+    // Two indicators constrained, no subfield (marc_245_ind1_1_ind2_2): whole field with both indicators fixed.
+    Matcher dualFieldMatcher = DUAL_INDICATOR_FIELD_PATTERN.matcher(core);
+    if (dualFieldMatcher.matches() && !isControlFieldTag(dualFieldMatcher.group("tag"))) {
+      return Optional.of(dualIndicatorField(
+        fieldName,
+        source,
+        dualFieldMatcher.group("tag"),
+        normalizeIndicatorValue(dualFieldMatcher.group("ind1")),
+        normalizeIndicatorValue(dualFieldMatcher.group("ind2"))));
+    }
+
+    // One indicator constrained, no subfield (marc_245_ind1_1): whole field with one indicator fixed.
+    Matcher constrainedFieldMatcher = CONSTRAINED_FIELD_PATTERN.matcher(core);
+    if (constrainedFieldMatcher.matches() && !isControlFieldTag(constrainedFieldMatcher.group("tag"))) {
+      return Optional.of(constrainedField(
+        fieldName,
+        source,
+        constrainedFieldMatcher.group("tag"),
+        constrainedFieldMatcher.group("indicator"),
+        normalizeIndicatorValue(constrainedFieldMatcher.group("indValue"))));
     }
 
     // Indicator target with the other indicator constrained (marc_245_ind1_1_ind2 / marc_245_ind2_1_ind1).
@@ -196,6 +231,21 @@ public class MarcFieldFactory {
     return new MarcFieldName(fieldName, source, tag, null,
       indicatorSlotValue("1", constraintIndicator, constraintValue),
       indicatorSlotValue("2", constraintIndicator, constraintValue), targetIndicator);
+  }
+
+  // Whole-field value with one indicator constrained, no subfield (marc_245_ind1_0): no target indicator, so it
+  // behaves like a value field narrowed to occurrences whose indicator matches.
+  private static MarcFieldName constrainedField(String fieldName, String source, String tag,
+                                                String constraintIndicator, String constraintValue) {
+    return new MarcFieldName(fieldName, source, tag, null,
+      indicatorSlotValue("1", constraintIndicator, constraintValue),
+      indicatorSlotValue("2", constraintIndicator, constraintValue), null);
+  }
+
+  // Whole-field value with both indicators constrained, no subfield (marc_245_ind1_1_ind2_2).
+  private static MarcFieldName dualIndicatorField(String fieldName, String source, String tag,
+                                                  String ind1Value, String ind2Value) {
+    return new MarcFieldName(fieldName, source, tag, null, ind1Value, ind2Value, null);
   }
 
   // The value for indicator slot ("1"/"2") when a single indicator is constrained; null for the other slot.
