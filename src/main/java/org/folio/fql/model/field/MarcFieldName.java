@@ -109,13 +109,14 @@ public record MarcFieldName(
    * Human-readable label. Examples: "MARC 245" (tag-only), "MARC 245$a" (subfield), "MARC 245 ind1" (indicator
    * target), "MARC 245 ind1=7 $a" (constrained subfield), "MARC 245 ind1=1 ind2=2 $a" (both constrained),
    * "MARC 245 ind1=1 ind2" (ind1 constrained, ind2 target), "MARC 008/06" (single position), "MARC 008/35-37"
-   * (position range), "MARC LDR/06" (leader position). The public {@code blank} token is shown rather than the
+   * (position range), "MARC ldr/06" (leader position). The public {@code blank} token is shown rather than the
    * stored {@code #}.
    */
   public String labelAlias() {
     if (isPositionTarget()) {
-      // Cataloging notation: tag/pos or tag/start-end, positions zero-padded to two digits.
-      String label = "MARC %s/%02d".formatted(tag.toUpperCase(), position);
+      // Cataloging notation: tag/pos or tag/start-end, positions zero-padded to two digits. The tag is shown as
+      // normalized (lower case), consistent with subfield/indicator labels.
+      String label = "MARC %s/%02d".formatted(tag, position);
       return position.equals(endPosition) ? label : label + "-%02d".formatted(endPosition);
     }
 

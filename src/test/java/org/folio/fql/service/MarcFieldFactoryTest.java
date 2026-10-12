@@ -102,16 +102,16 @@ class MarcFieldFactoryTest {
     "marc_008_p35_37,     ,         008, 35,       37,          MARC 008/35-37",
     "marc_006_p00,        ,         006, 0,        0,           MARC 006/00",
     "marc_007_p01,        ,         007, 1,        1,           MARC 007/01",
-    "marc_ldr_p06,        ,         ldr, 6,        6,           MARC LDR/06",
-    "marc_ldr_p00_04,     ,         ldr, 0,        4,           MARC LDR/00-04",
-    "MARC_LDR_P06,        ,         ldr, 6,        6,           MARC LDR/06",
+    "marc_ldr_p06,        ,         ldr, 6,        6,           MARC ldr/06",
+    "marc_ldr_p00_04,     ,         ldr, 0,        4,           MARC ldr/00-04",
+    "MARC_LDR_P06,        ,         ldr, 6,        6,           MARC ldr/06",
     "marc_005_p00_03,     ,         005, 0,        3,           MARC 005/00-03",
     // well-formed but beyond the 008 spec (40 chars): accepted so malformed records can be found
     "marc_008_p45,        ,         008, 45,       45,          MARC 008/45",
     "marc_008_p00_99,     ,         008, 0,        99,          MARC 008/00-99",
     // source-prefixed
     "marc_bib.marc_008_p06,    marc_bib, 008, 6,   6,           MARC 008/06",
-    "marc_bib.marc_ldr_p00_04, marc_bib, ldr, 0,   4,           MARC LDR/00-04"
+    "marc_bib.marc_ldr_p00_04, marc_bib, ldr, 0,   4,           MARC ldr/00-04"
   })
   void shouldParsePositionForms(String fieldName, String source, String tag, Integer position, Integer endPosition,
                                 String labelAlias) {
@@ -368,6 +368,37 @@ class MarcFieldFactoryTest {
     // A prefixed non-placeholder column is not the placeholder.
     assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
       new EntityTypeColumn().name("marc_bib.not_marc").dataType(new MarcType().dataType("marcType"))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"marc_leader", "marc_bib.marc_leader", "a.b.marc_leader"})
+  void isGenericMarcPlaceholderAcceptsLeaderPlaceholder(String name) {
+    assertTrue(MarcFieldFactory.isGenericMarcPlaceholder(
+      new EntityTypeColumn().name(name).dataType(new MarcType().dataType("marcType"))));
+    // Right name, wrong type.
+    assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
+      new EntityTypeColumn().name(name).dataType(new StringType())));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"marc_leaders", "not_marc_leader", "marc_bib.not_marc_leader", "marc_bib.marc_leader_x"})
+  void isGenericMarcPlaceholderRejectsLeaderLookalikes(String name) {
+    assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
+      new EntityTypeColumn().name(name).dataType(new MarcType().dataType("marcType"))));
+  }
+
+  @Test
+  void leaderFieldsStillCorrelateAgainstMarcPlaceholder() {
+    // Leader positions resolve via the "marc" placeholder; marc_leader is a hidden capability/join placeholder only.
+    MarcFieldName leader = MarcFieldFactory.parse("marc_bib.marc_ldr_p06").orElseThrow();
+    assertEquals("marc_bib.marc", leader.placeholderName());
+    assertTrue(MarcFieldFactory.resolveMarcField("marc_ldr_p06", marcEntityType()).isPresent());
+  }
+
+  @Test
+  void leaderPlaceholderIsNotItselfAMarcFieldName() {
+    assertFalse(MarcFieldFactory.isMarcFieldName("marc_leader"));
+    assertFalse(MarcFieldFactory.isMarcFieldName("marc_bib.marc_leader"));
   }
 
   @Test

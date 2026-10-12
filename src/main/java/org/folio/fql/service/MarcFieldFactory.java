@@ -36,8 +36,18 @@ public class MarcFieldFactory {
    */
   public static final String GENERIC_MARC_COLUMN_NAME = "marc";
 
-  // Suffix a composite's source-prefixed placeholder ends with, e.g. "marc_bib.marc" (chains too: "a.b.marc").
+  /**
+   * Name of the hidden placeholder column that declares an entity type exposes the MARC leader (backed by SRS's
+   * separate marc_indexers_leader table). Like {@link #GENERIC_MARC_COLUMN_NAME} it is internal plumbing, never a
+   * user-facing field, so it is recognized by {@link #isGenericMarcPlaceholder(EntityTypeColumn)}. Leader field
+   * names still correlate against the {@code marc} placeholder ({@link MarcFieldName#placeholderName()}).
+   */
+  public static final String LEADER_MARC_COLUMN_NAME = "marc_leader";
+
+  // Suffixes a composite's source-prefixed placeholders end with, e.g. "marc_bib.marc" / "marc_bib.marc_leader"
+  // (chains too: "a.b.marc").
   private static final String SOURCE_PLACEHOLDER_SUFFIX = "." + GENERIC_MARC_COLUMN_NAME;
+  private static final String SOURCE_LEADER_PLACEHOLDER_SUFFIX = "." + LEADER_MARC_COLUMN_NAME;
 
   // Tag-only form (e.g. marc_245). Matches any subfield of the tag. For control fields it is the only valid form
   // besides byte positions (see POSITION_PATTERN). All patterns match case-insensitively (MARC_245 behaves the
@@ -348,12 +358,18 @@ public class MarcFieldFactory {
       .findFirst();
   }
 
+  /**
+   * True for an internal MARC placeholder column ({@code marc} or {@code marc_leader}, optionally source-prefixed
+   * on a composite, e.g. {@code marc_bib.marc_leader}) with the {@code marcType} data type. Placeholders are
+   * capability/correlation plumbing and must be excluded from user-facing field lists.
+   */
   public static boolean isGenericMarcPlaceholder(EntityTypeColumn column) {
     if (column == null || !(column.getDataType() instanceof MarcType)) {
       return false;
     }
     String name = column.getName();
-    return GENERIC_MARC_COLUMN_NAME.equals(name) || name.endsWith(SOURCE_PLACEHOLDER_SUFFIX);
+    return GENERIC_MARC_COLUMN_NAME.equals(name) || name.endsWith(SOURCE_PLACEHOLDER_SUFFIX)
+      || LEADER_MARC_COLUMN_NAME.equals(name) || name.endsWith(SOURCE_LEADER_PLACEHOLDER_SUFFIX);
   }
 
   /**
