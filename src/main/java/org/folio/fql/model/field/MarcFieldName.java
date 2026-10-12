@@ -27,9 +27,7 @@ package org.folio.fql.model.field;
  *   <li>constrained field, both indicators ({@code marc_245_ind1_1_ind2_2}): {@code ind1Value} +
  *       {@code ind2Value}, no {@code subfield} and no {@code targetIndicator}</li>
  *   <li>byte position ({@code marc_008_p06}, {@code marc_008_p35_37}, {@code marc_ldr_p06}): control fields
- *       (001-009) and the leader only. {@code position} and {@code endPosition} set (equal for a single
- *       position, inclusive for a range); no subfield or indicators. The tag is {@link #LEADER_TAG} for the
- *       leader.</li>
+ *       and the leader only; {@code position} + {@code endPosition}</li>
  * </ul>
  *
  * @param fieldName       the original field name as referenced in the query (name preserved verbatim,
@@ -44,10 +42,9 @@ package org.folio.fql.model.field;
  *                        constraint
  * @param targetIndicator "1" or "2" when an indicator is the target (its values are returned/queried); null when
  *                        the target is a subfield value or the whole tag
- * @param position        zero-based start byte position for the byte-position form (0-99), or null otherwise
- * @param endPosition     zero-based inclusive end byte position for the byte-position form (equal to
- *                        {@code position} for a single position, strictly greater for a range), or null
- *                        otherwise
+ * @param position        zero-based start byte position, or null when not a byte-position field
+ * @param endPosition     zero-based inclusive end byte position (equal to {@code position} for a single
+ *                        position), or null when not a byte-position field
  */
 public record MarcFieldName(
   String fieldName,
@@ -65,11 +62,9 @@ public record MarcFieldName(
   public static final String BLANK_INDICATOR_TOKEN = "blank";
   /** How a blank indicator is stored in the MARC indexers table. */
   public static final String BLANK_INDICATOR_STORAGE = "#";
-  /** Tag value used for the leader (field names use {@code marc_ldr_...}; normalized to lower case). */
   public static final String LEADER_TAG = "ldr";
   private static final String PLACEHOLDER_COLUMN = "marc";
 
-  /** Non-positional forms (tag, subfield, and/or indicator); {@code position}/{@code endPosition} are null. */
   public MarcFieldName(String fieldName, String source, String tag, String subfield, String ind1Value,
                        String ind2Value, String targetIndicator) {
     this(fieldName, source, tag, subfield, ind1Value, ind2Value, targetIndicator, null, null);
@@ -92,15 +87,10 @@ public record MarcFieldName(
     return targetIndicator != null;
   }
 
-  /**
-   * True for the byte-position form ({@code marc_008_p06}, {@code marc_ldr_p00_04}): the target is the substring
-   * at {@code position}..{@code endPosition} (inclusive, zero-based) of the control field or leader value.
-   */
   public boolean isPositionTarget() {
     return position != null;
   }
 
-  /** True when this field references the leader rather than a numbered tag. */
   public boolean isLeader() {
     return LEADER_TAG.equals(tag);
   }
@@ -114,8 +104,6 @@ public record MarcFieldName(
    */
   public String labelAlias() {
     if (isPositionTarget()) {
-      // Cataloging notation: tag/pos or tag/start-end, positions zero-padded to two digits. The tag is shown as
-      // normalized (lower case), consistent with subfield/indicator labels.
       String label = "MARC %s/%02d".formatted(tag, position);
       return position.equals(endPosition) ? label : label + "-%02d".formatted(endPosition);
     }

@@ -106,10 +106,9 @@ class MarcFieldFactoryTest {
     "marc_ldr_p00_04,     ,         ldr, 0,        4,           MARC ldr/00-04",
     "MARC_LDR_P06,        ,         ldr, 6,        6,           MARC ldr/06",
     "marc_005_p00_03,     ,         005, 0,        3,           MARC 005/00-03",
-    // well-formed but beyond the 008 spec (40 chars): accepted so malformed records can be found
+    // beyond the 40-character 008 spec, still accepted
     "marc_008_p45,        ,         008, 45,       45,          MARC 008/45",
     "marc_008_p00_99,     ,         008, 0,        99,          MARC 008/00-99",
-    // source-prefixed
     "marc_bib.marc_008_p06,    marc_bib, 008, 6,   6,           MARC 008/06",
     "marc_bib.marc_ldr_p00_04, marc_bib, ldr, 0,   4,           MARC ldr/00-04"
   })
@@ -124,7 +123,6 @@ class MarcFieldFactoryTest {
     assertEquals(labelAlias, parsed.labelAlias());
     assertTrue(parsed.isPositionTarget());
     assertEquals("ldr".equals(tag), parsed.isLeader());
-    // A byte-position target carries no subfield or indicator parts.
     assertNull(parsed.subfield());
     assertNull(parsed.ind1Value());
     assertNull(parsed.ind2Value());
@@ -135,23 +133,23 @@ class MarcFieldFactoryTest {
   @ParameterizedTest
   @ValueSource(strings = {
     "marc_008_p6",         // position not zero-padded
-    "marc_008_p006",       // position too long
-    "marc_008_pXX",        // non-numeric position
-    "marc_008_p",          // no position
+    "marc_008_p006",
+    "marc_008_pXX",
+    "marc_008_p",
     "marc_008_p10_05",     // reversed range
-    "marc_008_p06_06",     // degenerate range: the single-position spelling is marc_008_p06
-    "marc_ldr_p00_00",     // degenerate range (leader)
-    "marc_008_p35_7",      // range end not zero-padded
-    "marc_008_p35_",       // dangling range separator
-    "marc_008_p35_37_39",  // too many positions
-    "marc_008_06",         // missing 'p' prefix
-    "marc_008_p06_a",      // position with subfield
+    "marc_008_p06_06",     // single position must be written marc_008_p06
+    "marc_ldr_p00_00",
+    "marc_008_p35_7",
+    "marc_008_p35_",
+    "marc_008_p35_37_39",
+    "marc_008_06",
+    "marc_008_p06_a",
     "marc_245_p06",        // data field has no byte positions
-    "marc_245_p00_04",     // data field has no byte positions (range)
+    "marc_245_p00_04",
     "marc_ldr",            // leader is position-only
-    "marc_ldr_a",          // leader has no subfields
-    "marc_ldr_ind1",       // leader has no indicators
-    "marc_bib.marc_245_p06" // source-prefixed data field position
+    "marc_ldr_a",
+    "marc_ldr_ind1",
+    "marc_bib.marc_245_p06"
   })
   void shouldRejectMalformedPositionForms(String fieldName) {
     assertTrue(MarcFieldFactory.parse(fieldName).isEmpty(), fieldName);
@@ -372,7 +370,6 @@ class MarcFieldFactoryTest {
 
   @Test
   void leaderFieldsCorrelateAgainstMarcPlaceholder() {
-    // Every MARC record has a leader, so leader positions share the "marc" placeholder (no separate leader one).
     MarcFieldName leader = MarcFieldFactory.parse("marc_bib.marc_ldr_p06").orElseThrow();
     assertEquals("marc_bib.marc", leader.placeholderName());
     assertTrue(MarcFieldFactory.resolveMarcField("marc_ldr_p06", marcEntityType()).isPresent());

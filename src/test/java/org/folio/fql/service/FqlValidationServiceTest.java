@@ -308,11 +308,11 @@ class FqlValidationServiceTest {
       "marc_650_ind1_blank_ind2_2_x", // both constrained (blank ind1) + subfield
       "marc_245_ind1_1_ind2",       // ind1 constrained, ind2 target
       "marc_245_ind2_1_ind1",       // ind2 constrained, ind1 target
-      "marc_008_p06",          // control field single byte position
-      "marc_008_p35_37",       // control field byte-position range
-      "marc_ldr_p06",          // leader single byte position
-      "marc_ldr_p00_04",       // leader byte-position range
-      "marc_008_p45",          // beyond the 008 spec length, but well-formed
+      "marc_008_p06",          // byte position
+      "marc_008_p35_37",       // byte-position range
+      "marc_ldr_p06",
+      "marc_ldr_p00_04",
+      "marc_008_p45",          // beyond the 008 spec, still accepted
       "MARC_245_A"             // case-insensitive
     );
   }
@@ -344,7 +344,7 @@ class FqlValidationServiceTest {
       "marc_245_ind1_ab_a",    // multi-char indicator value
       "marc_008_p6",           // position not zero-padded
       "marc_008_p10_05",       // reversed position range
-      "marc_008_p06_06",       // degenerate position range (use marc_008_p06)
+      "marc_008_p06_06",       // single position must be written marc_008_p06
       "marc_245_p06",          // data field has no byte positions
       "marc_"                  // no tag
     );
