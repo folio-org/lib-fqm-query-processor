@@ -39,8 +39,9 @@ public class MarcFieldFactory {
   // Suffix a composite's source-prefixed placeholder ends with, e.g. "marc_bib.marc" (chains too: "a.b.marc").
   private static final String SOURCE_PLACEHOLDER_SUFFIX = "." + GENERIC_MARC_COLUMN_NAME;
 
-  // Tag-only form (e.g. marc_245). Matches any subfield of the tag, and is the only valid form for control
-  // fields. All patterns match case-insensitively (MARC_245 behaves the same as marc_245).
+  // Tag-only form (e.g. marc_245). Matches any subfield of the tag. For control fields it is the only valid form
+  // besides byte positions (see POSITION_PATTERN). All patterns match case-insensitively (MARC_245 behaves the
+  // same as marc_245).
   private static final Pattern TAG_PATTERN =
     Pattern.compile("^marc_(?<tag>\\d{3})$", Pattern.CASE_INSENSITIVE);
 
@@ -84,6 +85,15 @@ public class MarcFieldFactory {
   // indicators fixed (canonical ind1-then-ind2 order). Data-field tags only.
   private static final Pattern DUAL_INDICATOR_FIELD_PATTERN = Pattern.compile(
     "^marc_(?<tag>\\d{3})_ind1_(?<ind1>blank|[a-z0-9])_ind2_(?<ind2>blank|[a-z0-9])$",
+    Pattern.CASE_INSENSITIVE);
+
+  // Byte-position form (e.g. marc_008_p06, marc_008_p35_37, marc_ldr_p00_04): a single position or inclusive range
+  // of a control field (001-009) or the leader. Positions are exactly two digits (zero-padded, 00-99), matching
+  // cataloging notation (008/06) and the SRS marc_indexers_leader column names (p_00_04). Only the shape is
+  // validated: there is deliberately no per-tag maximum (marc_008_p45 is accepted) so malformed overlong control
+  // fields can be found. Range ordering (end > start) is checked in parsePosition.
+  private static final Pattern POSITION_PATTERN = Pattern.compile(
+    "^marc_(?<tag>\\d{3}|" + MarcFieldName.LEADER_TAG + ")_p(?<start>\\d{2})(?:_(?<end>\\d{2}))?$",
     Pattern.CASE_INSENSITIVE);
 
   // Generic scanner for JSON field-name keys in a raw FQL query. It intentionally does NOT encode the MARC
@@ -192,13 +202,39 @@ public class MarcFieldFactory {
         indicatorMatcher.group("indicator")));
     }
 
-    // Tag-only (marc_245) -- the only form valid for control fields.
+    // Byte position(s) of a control field or the leader (marc_008_p06 / marc_008_p35_37 / marc_ldr_p06).
+    Matcher positionMatcher = POSITION_PATTERN.matcher(core);
+    if (positionMatcher.matches()) {
+      return parsePosition(fieldName, source, positionMatcher);
+    }
+
+    // Tag-only (marc_245) -- the only non-positional form valid for control fields.
     Matcher tagMatcher = TAG_PATTERN.matcher(core);
     if (tagMatcher.matches()) {
       return Optional.of(tagOnly(fieldName, source, tagMatcher.group("tag")));
     }
 
     return Optional.empty();
+  }
+
+  // Data fields (010+) have no byte positions. A range must be strictly ascending: reversed ranges
+  // (marc_008_p10_05) are meaningless, and a degenerate range (marc_008_p06_06) is rejected so each position has
+  // exactly one spelling (marc_008_p06).
+  private static Optional<MarcFieldName> parsePosition(String fieldName, String source, Matcher matcher) {
+    String tag = matcher.group("tag").toLowerCase();
+    if (!MarcFieldName.LEADER_TAG.equals(tag) && !isControlFieldTag(tag)) {
+      return Optional.empty();
+    }
+    int start = Integer.parseInt(matcher.group("start"));
+    String endGroup = matcher.group("end");
+    if (endGroup == null) {
+      return Optional.of(new MarcFieldName(fieldName, source, tag, null, null, null, null, start, start));
+    }
+    int end = Integer.parseInt(endGroup);
+    if (end <= start) {
+      return Optional.empty();
+    }
+    return Optional.of(new MarcFieldName(fieldName, source, tag, null, null, null, null, start, end));
   }
 
   private static MarcFieldName tagOnly(String fieldName, String source, String tag) {
