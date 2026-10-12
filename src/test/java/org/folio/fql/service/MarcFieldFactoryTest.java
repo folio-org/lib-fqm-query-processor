@@ -370,35 +370,13 @@ class MarcFieldFactoryTest {
       new EntityTypeColumn().name("marc_bib.not_marc").dataType(new MarcType().dataType("marcType"))));
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"marc_leader", "marc_bib.marc_leader", "a.b.marc_leader"})
-  void isGenericMarcPlaceholderAcceptsLeaderPlaceholder(String name) {
-    assertTrue(MarcFieldFactory.isGenericMarcPlaceholder(
-      new EntityTypeColumn().name(name).dataType(new MarcType().dataType("marcType"))));
-    // Right name, wrong type.
-    assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
-      new EntityTypeColumn().name(name).dataType(new StringType())));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"marc_leaders", "not_marc_leader", "marc_bib.not_marc_leader", "marc_bib.marc_leader_x"})
-  void isGenericMarcPlaceholderRejectsLeaderLookalikes(String name) {
-    assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
-      new EntityTypeColumn().name(name).dataType(new MarcType().dataType("marcType"))));
-  }
-
   @Test
-  void leaderFieldsStillCorrelateAgainstMarcPlaceholder() {
-    // Leader positions resolve via the "marc" placeholder; marc_leader is a hidden capability/join placeholder only.
+  void leaderFieldsCorrelateAgainstMarcPlaceholder() {
+    // Every MARC record has a leader, so leader positions share the "marc" placeholder (no separate leader one).
     MarcFieldName leader = MarcFieldFactory.parse("marc_bib.marc_ldr_p06").orElseThrow();
     assertEquals("marc_bib.marc", leader.placeholderName());
     assertTrue(MarcFieldFactory.resolveMarcField("marc_ldr_p06", marcEntityType()).isPresent());
-  }
-
-  @Test
-  void leaderPlaceholderIsNotItselfAMarcFieldName() {
-    assertFalse(MarcFieldFactory.isMarcFieldName("marc_leader"));
-    assertFalse(MarcFieldFactory.isMarcFieldName("marc_bib.marc_leader"));
+    assertTrue(MarcFieldFactory.resolveMarcField("marc_ldr_p06", nonMarcEntityType()).isEmpty());
   }
 
   @Test
