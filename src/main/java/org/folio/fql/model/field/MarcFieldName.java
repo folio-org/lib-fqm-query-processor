@@ -41,7 +41,7 @@ package org.folio.fql.model.field;
  * @param ind2Value       the fixed value ind2 is constrained to (same normalization), or null when ind2 is not a
  *                        constraint
  * @param targetIndicator "1" or "2" when an indicator is the target (its values are returned/queried); null when
- *                        the target is a subfield value or the whole tag
+ *                        the target is a subfield value, byte position(s), or the whole tag
  * @param position        zero-based start byte position, or null when not a byte-position field
  * @param endPosition     zero-based inclusive end byte position (equal to {@code position} for a single
  *                        position), or null when not a byte-position field
@@ -81,7 +81,7 @@ public record MarcFieldName(
 
   /**
    * True when an indicator is the target (the query returns/matches that indicator's values). When both indicators
-   * are only constraints, or the target is a subfield/tag value, this is false.
+   * are only constraints, or the target is a subfield/tag value or byte position(s), this is false.
    */
   public boolean isIndicatorTarget() {
     return targetIndicator != null;
