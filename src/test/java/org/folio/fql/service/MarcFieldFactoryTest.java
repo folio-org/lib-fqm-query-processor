@@ -97,6 +97,101 @@ class MarcFieldFactoryTest {
 
   @ParameterizedTest
   @CsvSource({
+    // fieldName,         source,   tag, position, endPosition, labelAlias
+    "marc_008_p06,        ,         008, 6,        6,           MARC 008/06",
+    "marc_008_p35_37,     ,         008, 35,       37,          MARC 008/35-37",
+    "marc_006_p00,        ,         006, 0,        0,           MARC 006/00",
+    "marc_007_p01,        ,         007, 1,        1,           MARC 007/01",
+    "marc_ldr_p06,        ,         ldr, 6,        6,           MARC ldr/06",
+    "marc_ldr_p00_04,     ,         ldr, 0,        4,           MARC ldr/00-04",
+    "MARC_LDR_P06,        ,         ldr, 6,        6,           MARC ldr/06",
+    "marc_005_p00_03,     ,         005, 0,        3,           MARC 005/00-03",
+    // beyond the 40-character 008 spec, still accepted
+    "marc_008_p45,        ,         008, 45,       45,          MARC 008/45",
+    "marc_008_p00_99,     ,         008, 0,        99,          MARC 008/00-99",
+    "marc_bib.marc_008_p06,    marc_bib, 008, 6,   6,           MARC 008/06",
+    "marc_bib.marc_ldr_p00_04, marc_bib, ldr, 0,   4,           MARC ldr/00-04"
+  })
+  void shouldParsePositionForms(String fieldName, String source, String tag, Integer position, Integer endPosition,
+                                String labelAlias) {
+    MarcFieldName parsed = MarcFieldFactory.parse(fieldName).orElseThrow();
+    assertEquals(fieldName, parsed.fieldName());
+    assertEquals(emptyToNull(source), parsed.source());
+    assertEquals(tag, parsed.tag());
+    assertEquals(position, parsed.position());
+    assertEquals(endPosition, parsed.endPosition());
+    assertEquals(labelAlias, parsed.labelAlias());
+    assertTrue(parsed.isPositionTarget());
+    assertEquals("ldr".equals(tag), parsed.isLeader());
+    assertNull(parsed.subfield());
+    assertNull(parsed.ind1Value());
+    assertNull(parsed.ind2Value());
+    assertNull(parsed.targetIndicator());
+    assertFalse(parsed.isIndicatorTarget());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "marc_008_p6",         // position not zero-padded
+    "marc_008_p006",
+    "marc_008_pXX",
+    "marc_008_p",
+    "marc_008_p10_05",     // reversed range
+    "marc_008_p06_06",     // single position must be written marc_008_p06
+    "marc_ldr_p00_00",
+    "marc_008_p35_7",
+    "marc_008_p35_",
+    "marc_008_p35_37_39",
+    "marc_008_06",
+    "marc_008_p06_a",
+    "marc_245_p06",        // data field has no byte positions
+    "marc_245_p00_04",
+    "marc_ldr",            // leader is position-only
+    "marc_ldr_a",
+    "marc_ldr_ind1",
+    "marc_bib.marc_245_p06"
+  })
+  void shouldRejectMalformedPositionForms(String fieldName) {
+    assertTrue(MarcFieldFactory.parse(fieldName).isEmpty(), fieldName);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"marc_245", "marc_008", "marc_245_a", "marc_245_ind1", "marc_245_ind1_7_a",
+    "marc_245_ind1_0", "marc_245_p"})
+  void nonPositionFormsHaveNoPosition(String fieldName) {
+    MarcFieldName parsed = MarcFieldFactory.parse(fieldName).orElseThrow();
+    assertFalse(parsed.isPositionTarget());
+    assertFalse(parsed.isLeader());
+    assertNull(parsed.position());
+    assertNull(parsed.endPosition());
+  }
+
+  @Test
+  void toColumnUsesPositionLabel() {
+    EntityTypeColumn column = MarcFieldFactory.toColumn(MarcFieldFactory.parse("marc_008_p35_37").orElseThrow());
+    assertEquals("marc_008_p35_37", column.getName());
+    assertEquals("MARC 008/35-37", column.getLabelAlias());
+    assertTrue(column.getDataType() instanceof MarcType);
+  }
+
+  @Test
+  void getReferencedMarcFieldNamesScansPositionKeys() {
+    String rawQuery = """
+      {
+        "$and": [
+          { "marc_008_p35_37": { "$eq": "eng" } },
+          { "marc_ldr_p06": { "$eq": "a" } },
+          { "marc_bib.marc_008_p06": { "$eq": "s" } },
+          { "marc_245_p06": { "$eq": "x" } }
+        ]
+      }
+      """;
+    assertEquals(List.of("marc_008_p35_37", "marc_ldr_p06", "marc_bib.marc_008_p06"),
+      List.copyOf(MarcFieldFactory.getReferencedMarcFieldNames(rawQuery)));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
     // fieldName,                     source,          tag, subfield, placeholderName
     "marc_bib.marc_245,               marc_bib,        245, ,         marc_bib.marc",
     "marc_bib.marc_245_a,             marc_bib,        245, a,        marc_bib.marc",
@@ -271,6 +366,14 @@ class MarcFieldFactoryTest {
     // A prefixed non-placeholder column is not the placeholder.
     assertFalse(MarcFieldFactory.isGenericMarcPlaceholder(
       new EntityTypeColumn().name("marc_bib.not_marc").dataType(new MarcType().dataType("marcType"))));
+  }
+
+  @Test
+  void leaderFieldsCorrelateAgainstMarcPlaceholder() {
+    MarcFieldName leader = MarcFieldFactory.parse("marc_bib.marc_ldr_p06").orElseThrow();
+    assertEquals("marc_bib.marc", leader.placeholderName());
+    assertTrue(MarcFieldFactory.resolveMarcField("marc_ldr_p06", marcEntityType()).isPresent());
+    assertTrue(MarcFieldFactory.resolveMarcField("marc_ldr_p06", nonMarcEntityType()).isEmpty());
   }
 
   @Test

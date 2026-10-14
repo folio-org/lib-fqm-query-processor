@@ -1,6 +1,7 @@
 ## 4.2.0
 - [LIBFQMQUER-20](https://folio-org.atlassian.net/browse/LIBFQMQUER-20): Support MARC field parsing and MARC-aware validation
 - [MODFQMMGR-1191](https://folio-org.atlassian.net/browse/MODFQMMGR-1191): Support multi-indicator querying in FQM
+- [LIBFQMQUER-22](https://folio-org.atlassian.net/browse/LIBFQMQUER-22): Support byte-position MARC field names for control and leader fields
 
 ## 4.1.0
 - [MODFQMMGR-889](https://folio-org.atlassian.net/browse/MODFQMMGR-889): Remove unsupported `contains` operators for predefined repeatable fields
